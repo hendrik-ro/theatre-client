@@ -8,6 +8,8 @@ interface MovieFormProps {
   onSubmit: (input: MovieInput) => Promise<void>;
 }
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 function fieldsFromMovie(movie?: Movie) {
   return {
     name: movie?.name ?? "",
@@ -63,8 +65,6 @@ export default function MovieForm({
       });
   }
 
-  const year = new Date().getFullYear();
-
   return (
     <form className="form" onSubmit={handleSubmit}>
       <label className="form__field">
@@ -84,7 +84,7 @@ export default function MovieForm({
           onChange={setField("year")}
           placeholder="1999"
           min={1750}
-          max={year}
+          max={CURRENT_YEAR}
         />
       </label>
       <label className="form__field">

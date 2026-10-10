@@ -8,6 +8,7 @@
   --accent-strong: #3d8ee8;
   --accent-text: #08121d;
   --danger: #ff7369;
+  --danger-strong: #ff5b50;
   --success: #34d399;
   --radius: 10px;
 
@@ -137,6 +138,15 @@ button:disabled {
   cursor: default;
 }
 
+.button--danger {
+  margin-top: 1rem;
+  background: var(--danger);
+}
+
+.button--danger:hover {
+  background: var(--danger-strong);
+}
+
 .form__error {
   margin: 0;
   font-size: 0.9rem;
@@ -187,6 +197,29 @@ button:disabled {
 
 .table__link:hover {
   color: var(--accent);
+}
+
+.table__sort {
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.table__sort:hover {
+  background: none;
+  color: var(--accent);
+}
+
+.table__sort--active,
+.table__sort--active:hover {
+  color: var(--text);
 }
 
 .detail {

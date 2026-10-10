@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { getMovie, updateMovie } from "../../api/movies";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { deleteMovie, getMovie, updateMovie } from "../../api/movies";
 import type { Movie, MovieInput } from "../../types/movie";
 import MovieForm from "./MovieForm";
 
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -53,6 +55,19 @@ export default function MovieDetail() {
     setSaved(true);
   }
 
+  async function handleRemove() {
+    if (!id || removing) return;
+    if (!window.confirm(`Remove "${movie?.name}"?`)) return;
+    setRemoving(true);
+    try {
+      await deleteMovie(id);
+      navigate("/");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to remove movie");
+      setRemoving(false);
+    }
+  }
+
   return (
     <section className="page">
       <Link className="back-link" to="/">
@@ -86,6 +101,14 @@ export default function MovieDetail() {
             <dd>{movie.genre ?? "—"}</dd>
           </div>
         </dl>
+        <button
+          type="button"
+          className="button--danger"
+          onClick={handleRemove}
+          disabled={removing}
+        >
+          {removing ? "Removing…" : "Remove Movie"}
+        </button>
       </div>
 
       <div className="panel">

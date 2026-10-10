@@ -55,3 +55,9 @@ export function updateMovie(id: string, input: MovieInput): Promise<Movie> {
     body: JSON.stringify(input),
   });
 }
+
+export function deleteMovie(id: string): Promise<{ message: string }> {
+  return request<{ message: string }>(`${BASE}/${id}`, {
+    method: "DELETE",
+  });
+}
