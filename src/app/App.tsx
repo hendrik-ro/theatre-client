@@ -9,8 +9,8 @@ const Layout = () => {
         <Outlet />
       </main>
     </>
-  )
-}
+  );
+};
 
 function App() {
   const router = createHashRouter([
@@ -19,10 +19,10 @@ function App() {
       element: <Layout />,
       children: [
         { index: true, element: <Home /> },
-        { path: "*", element: <Error404 />},
-      ]
-    }
-  ])
+        { path: "*", element: <Error404 /> },
+      ],
+    },
+  ]);
   return <RouterProvider router={router} />;
 }
 
