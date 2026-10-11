@@ -38,14 +38,7 @@ export function getMovie(id: string): Promise<Movie> {
 export function createMovie(input: MovieInput): Promise<Movie> {
   return request<Movie>(BASE, {
     method: "POST",
-    body: JSON.stringify({
-      name: input.name,
-      year: input.year,
-      runtime: input.runtime,
-      // The create endpoint expects the key "imbdRating" (sic)
-      imbdRating: input.imdbRating,
-      genre: input.genre,
-    }),
+    body: JSON.stringify(input),
   });
 }
 
