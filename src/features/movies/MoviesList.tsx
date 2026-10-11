@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { createMovie, getMovies } from "../../api/movies";
-import type { Movie } from "../../types/movie";
-import MovieForm from "./MovieForm";
+import { Link, useSearchParams } from "react-router-dom";
+import { getMovies, getMoviesMetaData } from "../../api/movies";
+import type { Movie, MoviesMeta } from "../../types/movie";
+import MovieFilters from "./MovieFilters";
+import type { GenreFilter, YearFilter } from "./MovieFilters";
 
 type SortKey = "name" | "year" | "runtime" | "imdb" | "genre";
 type SortDir = "asc" | "desc";
@@ -32,19 +33,75 @@ function compareMovies(a: Movie, b: Movie, key: SortKey, dir: SortDir) {
   return dir === "asc" ? cmp : -cmp;
 }
 
+// Filters live in the URL (?year=, ?genre=) so filtered views are
+// shareable, bookmarkable, and survive refresh and back/forward
+// navigation. "unknown" selects rows whose value is null; anything
+// unparseable is ignored rather than crashing the page.
+function parseYearFilter(raw: string | null): YearFilter {
+  if (raw === null) return null;
+  if (raw === "unknown") return "unknown";
+  const year = Number(raw);
+  return Number.isInteger(year) ? year : null;
+}
+
+function parseGenreFilter(raw: string | null): GenreFilter {
+  if (raw === null) return null;
+  if (raw === "unknown") return "unknown";
+  return raw;
+}
+
+function filterToParam(value: YearFilter | GenreFilter): string | null {
+  if (value === null) return null;
+  if (value === "unknown") return "unknown";
+  return String(value);
+}
+
 export default function MoviesList() {
   const [movies, setMovies] = useState<Movie[] | null>(null);
+  const [meta, setMeta] = useState<MoviesMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const yearFilter = parseYearFilter(searchParams.get("year"));
+  const genreFilter = parseGenreFilter(searchParams.get("genre"));
 
-  const sortedMovies = useMemo(
-    () =>
-      movies === null
-        ? null
-        : [...movies].sort((a, b) => compareMovies(a, b, sortKey, sortDir)),
-    [movies, sortKey, sortDir],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getMovies(), getMoviesMetaData()])
+      .then(([movieList, moviesMeta]) => {
+        if (!cancelled) {
+          setMovies(movieList);
+          setMeta(moviesMeta);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load movies",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visibleMovies = useMemo(() => {
+    if (movies === null) return null;
+    const filtered = movies.filter(
+      (movie) =>
+        (yearFilter === null ||
+          (yearFilter === "unknown"
+            ? movie.year === null
+            : movie.year === yearFilter)) &&
+        (genreFilter === null ||
+          (genreFilter === "unknown"
+            ? movie.genre === null
+            : movie.genre === genreFilter)),
+    );
+    return filtered.sort((a, b) => compareMovies(a, b, sortKey, sortDir));
+  }, [movies, yearFilter, genreFilter, sortKey, sortDir]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -75,49 +132,66 @@ export default function MoviesList() {
     );
   }
 
-  useEffect(() => {
-    let cancelled = false;
-    getMovies()
-      .then((result) => {
-        if (!cancelled) {
-          setMovies(result);
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load movies",
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function handleCreate(input: Parameters<typeof createMovie>[0]) {
-    await createMovie(input);
-    setMovies(await getMovies());
+  function setFilterParam(key: "year" | "genre", value: string | null) {
+    const next = new URLSearchParams(searchParams);
+    if (value === null) {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+    setSearchParams(next);
   }
+
+  function clearFilters() {
+    setSearchParams({});
+  }
+
+  const hasMovies = (movies?.length ?? 0) > 0;
 
   return (
     <section className="page">
-      <header className="page__header">
-        <h1>Movies</h1>
-        <p className="page__subtitle">Watched films, tracked here.</p>
+      <header className="page__header page__header--row">
+        <div>
+          <h1>Movies</h1>
+          <p className="page__subtitle">Watched films, tracked here.</p>
+        </div>
+        <Link className="page__action" to="/movies/new">
+          Add movie
+        </Link>
       </header>
-
-      <div className="panel">
-        <h2>Add a movie</h2>
-        <MovieForm submitLabel="Add movie" onSubmit={handleCreate} />
-      </div>
 
       <div className="panel">
         <h2>Library</h2>
         {error && <p className="form__error">{error}</p>}
         {movies === null && !error && <p className="muted">Loading…</p>}
-        {movies?.length === 0 && <p className="muted">No movies yet.</p>}
-        {sortedMovies && sortedMovies.length > 0 && (
+        {movies !== null && movies.length === 0 && (
+          <>
+            <p className="muted">No movies yet.</p>
+            <Link className="panel__action" to="/movies/new">
+              Add the first movie
+            </Link>
+          </>
+        )}
+        {meta !== null && hasMovies && (
+          <MovieFilters
+            meta={meta}
+            year={yearFilter}
+            genre={genreFilter}
+            onYearChange={(year) => setFilterParam("year", filterToParam(year))}
+            onGenreChange={(genre) =>
+              setFilterParam("genre", filterToParam(genre))
+            }
+          />
+        )}
+        {hasMovies && visibleMovies !== null && visibleMovies.length === 0 && (
+          <>
+            <p className="muted">No movies match the current filters.</p>
+            <button type="button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          </>
+        )}
+        {visibleMovies !== null && visibleMovies.length > 0 && (
           <table className="table">
             <thead>
               <tr>
@@ -129,7 +203,7 @@ export default function MoviesList() {
               </tr>
             </thead>
             <tbody>
-              {sortedMovies.map((movie) => (
+              {visibleMovies.map((movie) => (
                 <tr key={movie.id}>
                   <td>
                     <Link to={`/movies/${movie.id}`} className="table__link">

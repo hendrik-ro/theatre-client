@@ -16,3 +16,9 @@ export interface MovieInput {
   imdbRating?: number;
   genre?: string;
 }
+
+export interface MoviesMeta {
+  totalMovies: number;
+  moviesPerYear: { year: number | null; count: number }[];
+  moviesPerGenre: { genre: string | null; count: number }[];
+}

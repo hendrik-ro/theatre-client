@@ -1,4 +1,4 @@
-import type { Movie, MovieInput } from "../types/movie";
+import type { Movie, MovieInput, MoviesMeta } from "../types/movie";
 
 const BASE = "/api/movies";
 
@@ -29,6 +29,10 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export function getMovies(): Promise<Movie[]> {
   return request<Movie[]>(BASE);
+}
+
+export function getMoviesMetaData(): Promise<MoviesMeta> {
+  return request<MoviesMeta>(`${BASE}/meta`);
 }
 
 export function getMovie(id: string): Promise<Movie> {
