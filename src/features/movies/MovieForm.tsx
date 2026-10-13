@@ -6,6 +6,7 @@ interface MovieFormProps {
   initial?: Movie;
   submitLabel: string;
   onSubmit: (input: MovieInput) => Promise<void>;
+  onChange?: () => void;
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -24,6 +25,7 @@ export default function MovieForm({
   initial,
   submitLabel,
   onSubmit,
+  onChange,
 }: MovieFormProps) {
   const [fields, setFields] = useState(fieldsFromMovie(initial));
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export default function MovieForm({
   const setField =
     (key: keyof typeof fields) => (event: ChangeEvent<HTMLInputElement>) => {
       setFields((prev) => ({ ...prev, [key]: event.target.value }));
+      onChange?.();
     };
 
   function handleSubmit(event: FormEvent) {

@@ -5,11 +5,9 @@ export default function Error404() {
 
   return (
     <div className="errorPage">
-      <div className="errorPage">
-        <h1>THEATRE</h1>
-        <h2>Page Not Found</h2>
-        <p>The page you were looking for does not exist.</p>
-      </div>
+      <h1>THEATRE</h1>
+      <h2>Page Not Found</h2>
+      <p>The page you were looking for does not exist.</p>
       <div>
         <button onClick={() => navigate("/")}>Back Home</button>
       </div>

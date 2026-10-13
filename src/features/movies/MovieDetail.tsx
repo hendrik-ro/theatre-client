@@ -118,6 +118,7 @@ export default function MovieDetail() {
           initial={movie}
           submitLabel="Save changes"
           onSubmit={handleUpdate}
+          onChange={() => setSaved(false)}
         />
         {saved && <p className="saved-note">Saved.</p>}
       </div>
