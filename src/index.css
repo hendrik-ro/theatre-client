@@ -355,3 +355,42 @@ button:disabled {
   margin: 0.5rem 0 1.5rem;
   color: var(--muted);
 }
+
+/* --- auth --- */
+
+.app__session {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+}
+
+.app__logout {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.8rem;
+}
+
+.page--narrow .page__header--row .page__action {
+  margin-top: 0;
+}
+
+.page__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.page__actions .page__action {
+  margin-top: 0;
+}
+
+.page--narrow {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.profile__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

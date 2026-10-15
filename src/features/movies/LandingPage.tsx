@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMoviesMetaData } from "../../api/movies";
 import type { MoviesMeta } from "../../types/movie";
+import { useAuth } from "../../app/AuthContext";
 
 export default function LandingPage() {
+  const { user } = useAuth();
   const [meta, setMeta] = useState<MoviesMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,8 +60,11 @@ export default function LandingPage() {
           <p className="muted">
             No movies yet. Add the first one to see your library grow.
           </p>
-          <Link className="panel__action" to="/movies/new">
-            Add the first movie
+          <Link
+            className="panel__action"
+            to={user ? "/movies/new" : "/register"}
+          >
+            {user ? "Add the first movie" : "Register to get started"}
           </Link>
         </div>
       </section>
@@ -68,13 +73,29 @@ export default function LandingPage() {
 
   return (
     <section className="page">
-      <header className="page__header">
-        <h1>Overview</h1>
-        <p className="page__subtitle">
-          {meta.totalMovies} {meta.totalMovies === 1 ? "movie" : "movies"}{" "}
-          released in {meta.moviesPerYear.length}{" "}
-          {meta.moviesPerYear.length === 1 ? "year" : "different years"}.
-        </p>
+      <header className="page__header page__header--row">
+        <div>
+          <h1>Overview</h1>
+          <p className="page__subtitle">
+            {meta.totalMovies} {meta.totalMovies === 1 ? "movie" : "movies"}{" "}
+            released in {meta.moviesPerYear.length}{" "}
+            {meta.moviesPerYear.length === 1 ? "year" : "different years"}.
+          </p>
+        </div>
+        {user ? (
+          <Link className="page__action" to="/movies/new">
+            Add movie
+          </Link>
+        ) : (
+          <div className="page__actions">
+            <Link className="page__action" to="/login">
+              Log in
+            </Link>
+            <Link className="page__action" to="/register">
+              Register
+            </Link>
+          </div>
+        )}
       </header>
 
       <div className="panel">

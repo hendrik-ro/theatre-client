@@ -1,31 +1,7 @@
 import type { Movie, MovieInput, MoviesMeta } from "../types/movie";
+import { request } from "./client";
 
 const BASE = "/api/movies";
-
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body: unknown = await res.json();
-      if (
-        body !== null &&
-        typeof body === "object" &&
-        "message" in body &&
-        typeof body.message === "string"
-      ) {
-        message = body.message;
-      }
-    } catch {
-      // non-JSON error body, keep default message
-    }
-    throw new Error(message);
-  }
-  return (await res.json()) as T;
-}
 
 export function getMovies(): Promise<Movie[]> {
   return request<Movie[]>(BASE);
@@ -48,13 +24,12 @@ export function createMovie(input: MovieInput): Promise<Movie> {
 
 export function updateMovie(id: string, input: MovieInput): Promise<Movie> {
   return request<Movie>(`${BASE}/${id}`, {
-    method: "POST",
+    method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
-export function deleteMovie(id: string): Promise<{ message: string }> {
-  return request<{ message: string }>(`${BASE}/${id}`, {
-    method: "DELETE",
-  });
+// Admin-only; the server answers 403 for anyone else.
+export function deleteMovie(id: string): Promise<void> {
+  return request<void>(`/api/admin/movies/${id}`, { method: "DELETE" });
 }

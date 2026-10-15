@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteMovie, getMovie, updateMovie } from "../../api/movies";
 import type { Movie, MovieInput } from "../../types/movie";
+import { useAuth } from "../../app/AuthContext";
 import MovieForm from "./MovieForm";
 
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -61,7 +63,7 @@ export default function MovieDetail() {
     setRemoving(true);
     try {
       await deleteMovie(id);
-      navigate("/");
+      navigate("/movies");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to remove movie");
       setRemoving(false);
@@ -101,27 +103,31 @@ export default function MovieDetail() {
             <dd>{movie.genre ?? "—"}</dd>
           </div>
         </dl>
-        <button
-          type="button"
-          className="button--danger"
-          onClick={handleRemove}
-          disabled={removing}
-        >
-          {removing ? "Removing…" : "Remove Movie"}
-        </button>
+        {user?.role === "admin" && (
+          <button
+            type="button"
+            className="button--danger"
+            onClick={handleRemove}
+            disabled={removing}
+          >
+            {removing ? "Removing…" : "Remove Movie"}
+          </button>
+        )}
       </div>
 
-      <div className="panel">
-        <h2>Edit</h2>
-        <MovieForm
-          key={movie.updatedAt}
-          initial={movie}
-          submitLabel="Save changes"
-          onSubmit={handleUpdate}
-          onChange={() => setSaved(false)}
-        />
-        {saved && <p className="saved-note">Saved.</p>}
-      </div>
+      {user && (
+        <div className="panel">
+          <h2>Edit</h2>
+          <MovieForm
+            key={movie.updatedAt}
+            initial={movie}
+            submitLabel="Save changes"
+            onSubmit={handleUpdate}
+            onChange={() => setSaved(false)}
+          />
+          {saved && <p className="saved-note">Saved.</p>}
+        </div>
+      )}
     </section>
   );
 }

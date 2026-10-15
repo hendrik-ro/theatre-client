@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getMovies, getMoviesMetaData } from "../../api/movies";
 import type { Movie, MoviesMeta } from "../../types/movie";
+import { useAuth } from "../../app/AuthContext";
 import MovieFilters from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
@@ -57,6 +58,7 @@ function filterToParam(value: YearFilter | GenreFilter): string | null {
 }
 
 export default function MoviesList() {
+  const { user } = useAuth();
   const [movies, setMovies] = useState<Movie[] | null>(null);
   const [meta, setMeta] = useState<MoviesMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -155,9 +157,11 @@ export default function MoviesList() {
           <h1>Movies</h1>
           <p className="page__subtitle">Watched films, tracked here.</p>
         </div>
-        <Link className="page__action" to="/movies/new">
-          Add movie
-        </Link>
+        {user && (
+          <Link className="page__action" to="/movies/new">
+            Add movie
+          </Link>
+        )}
       </header>
 
       <div className="panel">
@@ -167,9 +171,15 @@ export default function MoviesList() {
         {movies !== null && movies.length === 0 && (
           <>
             <p className="muted">No movies yet.</p>
-            <Link className="panel__action" to="/movies/new">
-              Add the first movie
-            </Link>
+            {user ? (
+              <Link className="panel__action" to="/movies/new">
+                Add the first movie
+              </Link>
+            ) : (
+              <Link className="panel__action" to="/login">
+                Log in to add movies
+              </Link>
+            )}
           </>
         )}
         {meta !== null && hasMovies && (
