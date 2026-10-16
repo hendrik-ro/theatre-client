@@ -12,6 +12,6 @@ export interface RegisterInput {
 }
 
 export interface LoginInput {
-  email: string;
+  username: string;
   password: string;
 }

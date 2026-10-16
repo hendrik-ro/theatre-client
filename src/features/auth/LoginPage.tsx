@@ -6,7 +6,7 @@ import { useAuth } from "../../app/AuthContext";
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setPending(true);
     setError(null);
     try {
-      await login({ email, password });
+      await login({ username, password });
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -35,13 +35,13 @@ export default function LoginPage() {
         <form className="form" onSubmit={handleSubmit}>
           {error && <p className="form__error">{error}</p>}
           <label className="form__field">
-            <span>Email</span>
+            <span>Username</span>
             <input
-              type="email"
+              type="text"
               required
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
             />
           </label>
           <label className="form__field">
