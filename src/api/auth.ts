@@ -21,6 +21,12 @@ export function logout(): Promise<void> {
   return request<void>(`${BASE}/logout`, { method: "POST" });
 }
 
+// Rotates the HTTP-only JWT cookies server-side; no body needed. The
+// response carries the fresh pair back as Set-Cookie.
+export function refreshToken(): Promise<void> {
+  return request<void>(`${BASE}/refresh`, { method: "POST" });
+}
+
 // The source of truth for the current user; register and login establish
 // the session server-side and this confirms it.
 export function fetchMe(): Promise<AuthUser> {

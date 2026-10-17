@@ -358,7 +358,7 @@ button:disabled {
 
 /* --- auth --- */
 
-.app__session {
+.app__auth {
   display: flex;
   align-items: center;
   gap: 1.25rem;

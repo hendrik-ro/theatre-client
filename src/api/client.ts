@@ -13,11 +13,39 @@ export class ApiError extends Error {
 // Same-origin fetch wrapper: cookies ride along in dev (Vite proxy) and
 // in production (client served by the API server). JSON error bodies are
 // unwrapped into ApiError; empty 204 bodies resolve to undefined.
-export async function request<T>(url: string, init?: RequestInit): Promise<T> {
+export function request<T>(url: string, init?: RequestInit): Promise<T> {
+  return requestOnce<T>(url, init, false);
+}
+
+// A 401 on these would loop: they answer for themselves, and the refresh
+// endpoint itself must never trigger a refresh.
+const AUTH_ENDPOINTS = [
+  "/api/users/login",
+  "/api/users/register",
+  "/api/users/logout",
+  "/api/users/refresh",
+];
+
+async function requestOnce<T>(
+  url: string,
+  init: RequestInit | undefined,
+  isRetry: boolean,
+): Promise<T> {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });
+
+  // A 401 usually means the 15-minute access token expired. Call the
+  // refresh endpoint once — it rotates the HTTP-only cookies server-side —
+  // and replay the original request. Refresh failures fall through to the
+  // normal error path.
+  if (res.status === 401 && !isRetry && !AUTH_ENDPOINTS.includes(url)) {
+    const refresh = await fetch("/api/users/refresh", { method: "POST" });
+    if (refresh.ok) {
+      return requestOnce<T>(url, init, true);
+    }
+  }
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`;

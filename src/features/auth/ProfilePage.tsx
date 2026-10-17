@@ -6,7 +6,7 @@ import { useAuth } from "../../app/AuthContext";
 // Placeholder profile: name, delete profile, logout. Profile editing
 // arrives with the users phase.
 export default function ProfilePage() {
-  const { user, logout, refresh } = useAuth();
+  const { user, logout, reload } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -36,9 +36,9 @@ export default function ProfilePage() {
     setError(null);
     try {
       await deleteProfile(user!.id);
-      // The session cookie points at a deleted user now; refresh swings
-      // the context back to guest (requireAuth destroys it server-side).
-      await refresh();
+      // The auth cookies point at a deleted user now; reload swings the
+      // context back to guest (the server rejects their tokens).
+      await reload();
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete profile");

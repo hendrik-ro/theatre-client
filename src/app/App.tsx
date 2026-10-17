@@ -38,7 +38,7 @@ const Layout = () => {
             </NavLink>
           )}
         </nav>
-        <div className="app__session">
+        <div className="app__auth">
           {user ? (
             <>
               <NavLink to="/profile" className={navLinkClass}>
