@@ -80,6 +80,53 @@ server proxies `/api` requests to it).
 | `npm run format:check` | Check formatting without writing          |
 | `npm run ci`           | Commitlint, format check, lint, typecheck |
 
+## Docker
+
+The client ships container definitions for both development and
+production. Examples below use `docker`; the same commands work with
+`podman`. Ports are hardcoded (client `5173`, API server `3000`) and no
+environment variables or `.env` files are read at build or run time —
+`.dockerignore` keeps `.env` out of the build context entirely.
+
+| File                 | Purpose                                            |
+| -------------------- | -------------------------------------------------- |
+| `Dockerfile`         | Production: static build served by nginx on `5173` |
+| `Dockerfile.dev`     | Development: Vite dev server on `5173`             |
+| `nginx.conf`         | SPA fallback and `/api` proxy for the prod image   |
+| `docker-compose.yml` | Both variants as compose services                  |
+
+### Development
+
+Requires the API server running on the host. Use host networking so the
+Vite dev proxy (`/api` → `localhost:3000`) can reach it:
+
+```sh
+docker build -t theatre-client-dev -f Dockerfile.dev .
+docker run --rm -it --network=host theatre-client-dev
+# or: docker compose up --build client-dev
+```
+
+The dev image bakes the source in at build time, so rebuild after code
+changes (no bind mounts, no `.env` involved).
+
+### Production
+
+The prod image serves the built SPA on port `5173` and proxies `/api` to
+the API server on the host. The proxy target
+(`host.containers.internal:3000`) resolves automatically under podman;
+under docker it needs to be mapped to the host gateway explicitly:
+
+```sh
+docker build -t theatre-client .
+docker run -d -p 5173:5173 --add-host host.containers.internal:host-gateway theatre-client
+# or: docker compose up --build -d client
+```
+
+For a public deployment, publish both containers on loopback only
+(`-p 127.0.0.1:3000:3000` for the server, `-p 127.0.0.1:5173:5173` for
+this client) and put a TLS-terminating reverse proxy such as Caddy or
+nginx in front on ports 80/443.
+
 ## Roadmap
 
 - **User ratings** — rate movies yourself; every user's rating feeds a

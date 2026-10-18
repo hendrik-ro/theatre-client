@@ -1,0 +1,15 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+
+  client-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    network_mode: host
