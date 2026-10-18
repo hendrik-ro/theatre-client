@@ -4,12 +4,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import dotenv from "dotenv";
 
-// The repo keeps a single .env at the monorepo root; Vite only loads
-// env files from its own root by default. Resolve from this module's
-// location so the file is found regardless of the process cwd.
+// Vite only loads env files from its own root by default. Resolve from
+// this module's location so the file is found regardless of the process
+// cwd; this config sits at the repo root alongside .env.
 const envPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../.env",
+  ".env",
 );
 dotenv.config({ path: envPath });
 
