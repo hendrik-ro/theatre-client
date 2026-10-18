@@ -1,0 +1,11 @@
+node_modules
+dist
+*.tsbuildinfo
+.git
+.github
+.husky
+.vite
+.env
+.env.*
+!.env.example
+*.log
