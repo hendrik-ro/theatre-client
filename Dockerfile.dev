@@ -4,4 +4,6 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+# Run vite directly as PID 1 so stop signals (compose down, podman stop)
+# reach it without the npm wrapper turning a graceful stop into an error.
+CMD ["node_modules/.bin/vite", "--host", "0.0.0.0", "--port", "5173"]
