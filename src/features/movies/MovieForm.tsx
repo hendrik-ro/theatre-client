@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import { friendlyError } from "../../api/errors";
 import type { Movie, MovieInput } from "../../types/movie";
 
 interface MovieFormProps {
@@ -61,7 +62,7 @@ export default function MovieForm({
         }
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Something went wrong");
+        setError(friendlyError(err, "Something went wrong"));
       })
       .finally(() => {
         setPending(false);

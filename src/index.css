@@ -305,6 +305,27 @@ button:disabled {
   color: var(--text);
 }
 
+.table__action {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.table__action--danger,
+.table__action--danger:hover {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--danger);
+  background: none;
+  border: 1px solid var(--border);
+}
+
+.table__action--danger:hover {
+  color: var(--accent-text);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
 .detail {
   margin: 0;
   display: grid;

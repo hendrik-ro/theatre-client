@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getMovies, getMoviesMetaData } from "../../api/movies";
+import {
+  addToWatchlist,
+  getWatchlist,
+  removeFromWatchlist,
+} from "../../api/watchlists";
+import { friendlyError } from "../../api/errors";
 import type { Movie, MoviesMeta } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
 import MovieFilters from "./MovieFilters";
@@ -62,6 +68,9 @@ export default function MoviesList() {
   const [movies, setMovies] = useState<Movie[] | null>(null);
   const [meta, setMeta] = useState<MoviesMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [watchlist, setWatchlist] = useState<Set<string> | null>(null);
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -79,15 +88,38 @@ export default function MoviesList() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load movies",
-          );
+          setError(friendlyError(err, "Failed to load movies"));
         }
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // The watchlist only exists for signed-in users; the auth context
+  // resolves asynchronously, so this re-runs when login state settles.
+  // No reset-on-logout is needed: every watchlist render below is gated
+  // on `user`, and a new session always refetches.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getWatchlist()
+      .then((entries) => {
+        if (!cancelled) {
+          setWatchlist(new Set(entries.map((entry) => entry.id)));
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setWatchlistError(
+            friendlyError(err, "Failed to load your watchlist"),
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const visibleMovies = useMemo(() => {
     if (movies === null) return null;
@@ -111,6 +143,32 @@ export default function MoviesList() {
     } else {
       setSortKey(key);
       setSortDir("asc");
+    }
+  }
+
+  // Optimistic toggle: the local set flips immediately and rolls back
+  // if the server call fails. pendingId disables all toggles while one
+  // is in flight, keeping the local set a reliable rollback snapshot.
+  async function toggleWatchlist(movie: Movie) {
+    if (!user || pendingId !== null) return;
+    const wasInList = watchlist?.has(movie.id) ?? false;
+    const previous = watchlist;
+    setWatchlistError(null);
+    setPendingId(movie.id);
+    setWatchlist((list) => {
+      const next = new Set(list ?? []);
+      if (wasInList) next.delete(movie.id);
+      else next.add(movie.id);
+      return next;
+    });
+    try {
+      if (wasInList) await removeFromWatchlist(movie.id);
+      else await addToWatchlist(movie.id);
+    } catch (err) {
+      setWatchlist(previous);
+      setWatchlistError(friendlyError(err, "Failed to update your watchlist"));
+    } finally {
+      setPendingId(null);
     }
   }
 
@@ -167,6 +225,9 @@ export default function MoviesList() {
       <div className="panel">
         <h2>Library</h2>
         {error && <p className="form__error">{error}</p>}
+        {user && watchlistError && (
+          <p className="form__error">{watchlistError}</p>
+        )}
         {movies === null && !error && <p className="muted">Loading…</p>}
         {movies !== null && movies.length === 0 && (
           <>
@@ -210,6 +271,7 @@ export default function MoviesList() {
                 {sortHeader("runtime", "Runtime")}
                 {sortHeader("imdb", "IMDb")}
                 {sortHeader("genre", "Genre")}
+                {user && <th aria-label="Watchlist" />}
               </tr>
             </thead>
             <tbody>
@@ -226,6 +288,20 @@ export default function MoviesList() {
                   </td>
                   <td>{movie.imdbRating ?? "—"}</td>
                   <td>{movie.genre ?? "—"}</td>
+                  {user && (
+                    <td>
+                      <button
+                        type="button"
+                        className="table__action"
+                        onClick={() => void toggleWatchlist(movie)}
+                        disabled={pendingId !== null}
+                      >
+                        {watchlist?.has(movie.id)
+                          ? "Remove from watchlist"
+                          : "Add to watchlist"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

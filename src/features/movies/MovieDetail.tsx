@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteMovie, getMovie, updateMovie } from "../../api/movies";
+import { friendlyError } from "../../api/errors";
 import type { Movie, MovieInput } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
 import MovieForm from "./MovieForm";
@@ -23,7 +24,7 @@ export default function MovieDetail() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load movie");
+          setError(friendlyError(err, "Failed to load movie"));
         }
       });
     return () => {
@@ -65,7 +66,7 @@ export default function MovieDetail() {
       await deleteMovie(id);
       navigate("/movies");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to remove movie");
+      setError(friendlyError(err, "Failed to remove movie"));
       setRemoving(false);
     }
   }
