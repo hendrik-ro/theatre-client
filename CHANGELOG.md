@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/hendrik-ro/theatre-client/compare/v1.2.0...v1.3.0) (2026-10-20)
+
+
+### Features
+
+* watchlists, password confirmation, api error messages ([#4](https://github.com/hendrik-ro/theatre-client/issues/4)) ([2086a70](https://github.com/hendrik-ro/theatre-client/commit/2086a70f6bb6bf32b61ddbe9d1503a55b7cf1c69))
+
 # [1.2.0](https://github.com/hendrik-ro/theatre/compare/v1.1.1...v1.2.0) (2026-10-17)
 
 ### Features
