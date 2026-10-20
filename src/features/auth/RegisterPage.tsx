@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { friendlyError } from "../../api/errors";
 import { useAuth } from "../../app/AuthContext";
 
 // Mirrors the server's zod rules so obvious mistakes never leave the
@@ -11,19 +12,24 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (pending) return;
+    if (password !== repeatPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     setPending(true);
     setError(null);
     try {
       await register({ username, email, password });
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(friendlyError(err, "Registration failed"));
       setPending(false);
     }
   }
@@ -71,6 +77,20 @@ export default function RegisterPage() {
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <label className="form__field">
+            <span>Repeat password</span>
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={repeatPassword}
+              onChange={(event) => setRepeatPassword(event.target.value)}
+              aria-invalid={
+                repeatPassword !== "" && repeatPassword !== password
+              }
             />
           </label>
           <button type="submit" disabled={pending}>

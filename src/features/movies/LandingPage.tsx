@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMoviesMetaData } from "../../api/movies";
+import { friendlyError } from "../../api/errors";
 import type { MoviesMeta } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
 
@@ -19,9 +20,7 @@ export default function LandingPage() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load metadata",
-          );
+          setError(friendlyError(err, "Failed to load metadata"));
         }
       });
     return () => {

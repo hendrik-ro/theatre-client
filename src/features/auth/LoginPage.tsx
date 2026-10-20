@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { friendlyError } from "../../api/errors";
 import { useAuth } from "../../app/AuthContext";
 
 export default function LoginPage() {
@@ -20,7 +21,7 @@ export default function LoginPage() {
       await login({ username, password });
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(friendlyError(err, "Login failed"));
       setPending(false);
     }
   }
