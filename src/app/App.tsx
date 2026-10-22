@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./AuthContext";
+import RatingsSync from "./RatingsSync";
 import LandingPage from "../features/movies/LandingPage";
 import MoviesList from "../features/movies/MoviesList";
 import MovieFormPage from "../features/movies/MovieFormPage";
@@ -96,7 +97,9 @@ function App() {
   ]);
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <RatingsSync>
+        <RouterProvider router={router} />
+      </RatingsSync>
     </AuthProvider>
   );
 }
