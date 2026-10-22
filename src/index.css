@@ -415,3 +415,48 @@ button:disabled {
   gap: 0.75rem;
   margin-top: 1rem;
 }
+
+/* --- ratings --- */
+
+.rating--empty {
+  color: var(--muted);
+}
+
+.rating-editor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.rating-editor__select {
+  min-width: 10rem;
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.rating-editor__select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.rating-editor__remove,
+.rating-editor__remove:hover {
+  color: var(--danger);
+  background: none;
+  border: 1px solid var(--border);
+}
+
+.rating-editor__remove:hover {
+  color: var(--accent-text);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.rating-editor__error {
+  flex-basis: 100%;
+}

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { selectAllRatings } from "./store/ratingsSlice";
+import { useAppDispatch } from "./store/hooks";
+import { clearRatings } from "./store/ratingsSlice";
 import { fetchRatings } from "./store/ratingsThunks";
 import { useAuth } from "./AuthContext";
 
@@ -8,19 +8,24 @@ interface RatingsSyncProps {
   children: React.ReactNode;
 }
 
-// This component syncs ratings with the Redux store when auth state changes.
-// It fetches ratings when a user logs in and clears them on logout.
+// This component syncs ratings with the Redux store when the signed-in
+// user changes. Ratings are keyed to the user id, so every login refetches
+// (a second user on the same client instance must never see the previous
+// user's ratings) and a logout clears the store instead of leaving the
+// previous user's ratings behind until a page refresh.
 export default function RatingsSync({ children }: RatingsSyncProps) {
   const dispatch = useAppDispatch();
   const { user, ready } = useAuth();
-  const ratings = useAppSelector(selectAllRatings);
+  const userId = user?.id ?? null;
 
-  // Fetch ratings when user logs in and we haven't loaded them yet
   useEffect(() => {
-    if (user && ready && ratings.length === 0) {
+    if (!ready) return;
+    if (userId) {
       dispatch(fetchRatings());
+    } else {
+      dispatch(clearRatings());
     }
-  }, [user, ready, ratings.length, dispatch]);
+  }, [userId, ready, dispatch]);
 
   return <>{children}</>;
 }

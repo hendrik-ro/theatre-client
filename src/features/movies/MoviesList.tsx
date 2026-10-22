@@ -270,9 +270,9 @@ export default function MoviesList() {
                 {sortHeader("name", "Name")}
                 {sortHeader("year", "Year")}
                 {sortHeader("runtime", "Runtime")}
-                {sortHeader("imdb", "IMDb")}
                 {sortHeader("genre", "Genre")}
-                {user && <th>Rating</th>}
+                {sortHeader("imdb", "IMDb")}
+                {user && <th>My rating</th>}
                 {user && <th aria-label="Watchlist" />}
               </tr>
             </thead>
@@ -284,12 +284,12 @@ export default function MoviesList() {
                       {movie.name}
                     </Link>
                   </td>
-                  <td>{movie.year ?? "—"}</td>
+                  <td>{movie.year ?? "-"}</td>
                   <td>
-                    {movie.runtime !== null ? `${movie.runtime} min` : "—"}
+                    {movie.runtime !== null ? `${movie.runtime} min` : "-"}
                   </td>
-                  <td>{movie.imdbRating ?? "—"}</td>
-                  <td>{movie.genre ?? "—"}</td>
+                  <td>{movie.genre ?? "-"}</td>
+                  <td>{movie.imdbRating ?? "-"}</td>
                   {user && (
                     <td>
                       <RatingDisplay movieId={movie.id} />

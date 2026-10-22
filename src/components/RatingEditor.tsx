@@ -6,13 +6,15 @@ import { friendlyError } from "../api/errors";
 interface RatingEditorProps {
   movieId: string;
   currentRating?: number;
-  onComplete: () => void;
+  onSaved?: () => void;
+  onChange?: () => void;
 }
 
 export default function RatingEditor({
   movieId,
   currentRating,
-  onComplete,
+  onSaved,
+  onChange,
 }: RatingEditorProps) {
   const dispatch = useAppDispatch();
   const [rating, setRating] = useState<number | "">(currentRating ?? "");
@@ -31,19 +33,16 @@ export default function RatingEditor({
 
     try {
       await dispatch(rateMovieThunk({ movieId, rating }));
-      onComplete();
+      onSaved?.();
     } catch (err) {
       setError(friendlyError(err, "Failed to save rating"));
+    } finally {
       setPending(false);
     }
   };
 
   const handleRemove = async () => {
-    if (
-      !window.confirm(
-        "Remove your rating for this movie? This cannot be undone.",
-      )
-    ) {
+    if (!window.confirm("Remove your rating for this movie?")) {
       return;
     }
 
@@ -52,9 +51,11 @@ export default function RatingEditor({
 
     try {
       await dispatch(deleteRatingThunk(movieId));
-      onComplete();
+      setRating("");
+      onSaved?.();
     } catch (err) {
       setError(friendlyError(err, "Failed to remove rating"));
+    } finally {
       setPending(false);
     }
   };
@@ -66,14 +67,16 @@ export default function RatingEditor({
         onChange={(e) => {
           const value = e.target.value;
           setRating(value === "" ? "" : Number(value));
+          onChange?.();
         }}
         disabled={pending}
         className="rating-editor__select"
+        aria-label="My rating"
       >
         <option value="">Select a rating...</option>
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].reverse().map((value) => (
           <option key={value} value={value}>
-            {value} - {value === 0 ? "Unrated" : `${value}/10`}
+            {value}
           </option>
         ))}
       </select>
@@ -92,7 +95,7 @@ export default function RatingEditor({
           className="rating-editor__remove"
           aria-label="Remove rating"
         >
-          ×
+          Remove rating
         </button>
       )}
       {error && <p className="rating-editor__error form__error">{error}</p>}

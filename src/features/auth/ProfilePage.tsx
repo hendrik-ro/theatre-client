@@ -147,8 +147,9 @@ export default function ProfilePage() {
                 <th>Name</th>
                 <th>Year</th>
                 <th>Runtime</th>
+                <th>Genre</th>
                 <th>IMDb</th>
-                <th>Rating</th>
+                <th>My rating</th>
                 <th aria-label="Remove" />
               </tr>
             </thead>
@@ -160,10 +161,11 @@ export default function ProfilePage() {
                       {entry.name}
                     </Link>
                   </td>
-                  <td>{entry.year ?? "—"}</td>
+                  <td>{entry.year ?? "-"}</td>
                   <td>
-                    {entry.runtime !== null ? `${entry.runtime} min` : "—"}
+                    {entry.runtime !== null ? `${entry.runtime} min` : "-"}
                   </td>
+                  <td>{entry.genre ?? "-"}</td>
                   <td>{entry.imdbRating ?? "—"}</td>
                   <td>
                     <RatingDisplay movieId={entry.id} />

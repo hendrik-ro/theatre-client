@@ -4,15 +4,22 @@ import { deleteMovie, getMovie, updateMovie } from "../../api/movies";
 import { friendlyError } from "../../api/errors";
 import type { Movie, MovieInput } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
+import { useAppSelector } from "../../app/store/hooks";
+import { selectRatingByMovieId } from "../../app/store/ratingsSlice";
+import RatingEditor from "../../components/RatingEditor";
 import MovieForm from "./MovieForm";
 
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const myRating = useAppSelector((state) =>
+    selectRatingByMovieId(state, id ?? ""),
+  );
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [ratingSaved, setRatingSaved] = useState(false);
   const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
@@ -60,7 +67,10 @@ export default function MovieDetail() {
 
   async function handleRemove() {
     if (!id || removing) return;
-    if (!window.confirm(`Remove "${movie?.name}"?`)) return;
+    if (
+      !window.confirm(`Remove "${movie?.name}"?\nThis action cannot be undone.`)
+    )
+      return;
     setRemoving(true);
     try {
       await deleteMovie(id);
@@ -115,6 +125,19 @@ export default function MovieDetail() {
           </button>
         )}
       </div>
+
+      {user && (
+        <div className="panel">
+          <h2>My rating</h2>
+          <RatingEditor
+            movieId={movie.id}
+            currentRating={myRating}
+            onSaved={() => setRatingSaved(true)}
+            onChange={() => setRatingSaved(false)}
+          />
+          {ratingSaved && <p className="saved-note">Saved.</p>}
+        </div>
+      )}
 
       {user && (
         <div className="panel">
