@@ -5,6 +5,7 @@ import { getWatchlist, removeFromWatchlist } from "../../api/watchlists";
 import { friendlyError } from "../../api/errors";
 import type { Movie } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
+import RatingDisplay from "../../components/RatingDisplay";
 
 // Placeholder profile: name, delete profile, logout. Profile editing
 // arrives with the users phase.
@@ -147,6 +148,7 @@ export default function ProfilePage() {
                 <th>Year</th>
                 <th>Runtime</th>
                 <th>IMDb</th>
+                <th>Rating</th>
                 <th aria-label="Remove" />
               </tr>
             </thead>
@@ -163,6 +165,9 @@ export default function ProfilePage() {
                     {entry.runtime !== null ? `${entry.runtime} min` : "—"}
                   </td>
                   <td>{entry.imdbRating ?? "—"}</td>
+                  <td>
+                    <RatingDisplay movieId={entry.id} />
+                  </td>
                   <td>
                     <button
                       type="button"

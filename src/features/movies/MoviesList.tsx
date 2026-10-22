@@ -9,6 +9,7 @@ import {
 import { friendlyError } from "../../api/errors";
 import type { Movie, MoviesMeta } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
+import RatingDisplay from "../../components/RatingDisplay";
 import MovieFilters from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
@@ -271,6 +272,7 @@ export default function MoviesList() {
                 {sortHeader("runtime", "Runtime")}
                 {sortHeader("imdb", "IMDb")}
                 {sortHeader("genre", "Genre")}
+                {user && <th>Rating</th>}
                 {user && <th aria-label="Watchlist" />}
               </tr>
             </thead>
@@ -288,6 +290,11 @@ export default function MoviesList() {
                   </td>
                   <td>{movie.imdbRating ?? "—"}</td>
                   <td>{movie.genre ?? "—"}</td>
+                  {user && (
+                    <td>
+                      <RatingDisplay movieId={movie.id} />
+                    </td>
+                  )}
                   {user && (
                     <td>
                       <button
