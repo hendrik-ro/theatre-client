@@ -37,7 +37,7 @@ export default function MovieDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, movie]);
 
   if (error) {
     return (
@@ -108,6 +108,10 @@ export default function MovieDetail() {
           <div>
             <dt>IMDb rating</dt>
             <dd>{movie.imdbRating ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>Theatre Ø</dt>
+            <dd>{movie.ratingCount >= 2 ? movie.averageRating : "-"}</dd>
           </div>
           <div>
             <dt>Genre</dt>

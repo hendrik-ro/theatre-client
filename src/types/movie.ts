@@ -7,6 +7,8 @@ export interface Movie {
   runtime: number | null;
   imdbRating: number | null;
   genre: string | null;
+  averageRating: number | null;
+  ratingCount: number;
 }
 
 export interface MovieInput {
