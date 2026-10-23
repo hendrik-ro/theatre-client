@@ -129,15 +129,8 @@ nginx in front on ports 80/443.
 
 ## Roadmap
 
-- **User ratings** — rate movies yourself; every user's rating feeds a
-  shared user average shown alongside the IMDb rating
-- **Watchlist** — earmark movies you want to see and keep them in a
-  separate list until you have watched them
-- **Watched status** — mark movies as watched and track what is still
-  pending
-
-Longer term: one-command local Postgres via docker and deployment of app
-plus database as containers on a single VPS.
+- **Pagination** - Paginated movie lists
+  - _blocker:_ backend implementation missing
 
 ## Contributing
 
