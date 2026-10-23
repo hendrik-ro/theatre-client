@@ -1,15 +1,13 @@
 # [1.4.0](https://github.com/hendrik-ro/theatre-client/compare/v1.3.0...v1.4.0) (2026-10-22)
 
-
 ### Bug Fixes
 
-* **ratings:** clear ratings on user_id change, rate on movie detail page ([4141918](https://github.com/hendrik-ro/theatre-client/commit/41419181c2a6ead69c156a333a4c1b4b5a8ac329))
-
+- **ratings:** clear ratings on user_id change, rate on movie detail page ([4141918](https://github.com/hendrik-ro/theatre-client/commit/41419181c2a6ead69c156a333a4c1b4b5a8ac329))
 
 ### Features
 
-* **ratings:** user movie ratings ([d480cfa](https://github.com/hendrik-ro/theatre-client/commit/d480cfadd3c639d5121fc0db18753249593510c8))
-* **ratings:** user movie ratings ([b3d63d4](https://github.com/hendrik-ro/theatre-client/commit/b3d63d4f4a5823b9bd2038acfaa167cb0cf16aa7))
+- **ratings:** user movie ratings ([d480cfa](https://github.com/hendrik-ro/theatre-client/commit/d480cfadd3c639d5121fc0db18753249593510c8))
+- **ratings:** user movie ratings ([b3d63d4](https://github.com/hendrik-ro/theatre-client/commit/b3d63d4f4a5823b9bd2038acfaa167cb0cf16aa7))
 
 # [1.3.0](https://github.com/hendrik-ro/theatre-client/compare/v1.2.0...v1.3.0) (2026-10-20)
 

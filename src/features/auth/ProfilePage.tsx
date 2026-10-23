@@ -149,6 +149,7 @@ export default function ProfilePage() {
                 <th>Runtime</th>
                 <th>Genre</th>
                 <th>IMDb</th>
+                <th>Theatre Ø</th>
                 <th>My rating</th>
                 <th aria-label="Remove" />
               </tr>
@@ -166,7 +167,8 @@ export default function ProfilePage() {
                     {entry.runtime !== null ? `${entry.runtime} min` : "-"}
                   </td>
                   <td>{entry.genre ?? "-"}</td>
-                  <td>{entry.imdbRating ?? "—"}</td>
+                  <td>{entry.imdbRating ?? "-"}</td>
+                  <td>{entry.ratingCount >= 2 ? entry.averageRating : "-"}</td>
                   <td>
                     <RatingDisplay movieId={entry.id} />
                   </td>

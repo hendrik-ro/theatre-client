@@ -13,7 +13,7 @@ import RatingDisplay from "../../components/RatingDisplay";
 import MovieFilters from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
-type SortKey = "name" | "year" | "runtime" | "imdb" | "genre";
+type SortKey = "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating";
 type SortDir = "asc" | "desc";
 
 const SORT_ACCESSORS: Record<
@@ -25,6 +25,7 @@ const SORT_ACCESSORS: Record<
   runtime: (movie) => movie.runtime,
   imdb: (movie) => movie.imdbRating,
   genre: (movie) => movie.genre,
+  avg_rating: (movie) => movie.averageRating,
 };
 
 const TEXT_KEYS: SortKey[] = ["name", "genre"];
@@ -272,6 +273,7 @@ export default function MoviesList() {
                 {sortHeader("runtime", "Runtime")}
                 {sortHeader("genre", "Genre")}
                 {sortHeader("imdb", "IMDb")}
+                {sortHeader("avg_rating", "Theatre Ø")}
                 {user && <th>My rating</th>}
                 {user && <th aria-label="Watchlist" />}
               </tr>
@@ -290,6 +292,7 @@ export default function MoviesList() {
                   </td>
                   <td>{movie.genre ?? "-"}</td>
                   <td>{movie.imdbRating ?? "-"}</td>
+                  <td>{movie.ratingCount >= 2 ? movie.averageRating : "-"}</td>
                   {user && (
                     <td>
                       <RatingDisplay movieId={movie.id} />
