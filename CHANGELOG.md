@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/hendrik-ro/theatre-client/compare/v1.4.0...v1.5.0) (2026-10-23)
+
+
+### Features
+
+* **ratings:** average movie ratings ([9b9cfbb](https://github.com/hendrik-ro/theatre-client/commit/9b9cfbb22be66d55b586d8040d709cedf68204f8))
+* **ux:** new profile page ([330c014](https://github.com/hendrik-ro/theatre-client/commit/330c0140511cefc564444f16b9f3c14c279d0a50))
+
 # [1.4.0](https://github.com/hendrik-ro/theatre-client/compare/v1.3.0...v1.4.0) (2026-10-22)
 
 ### Bug Fixes
