@@ -9,16 +9,23 @@ import {
 import { friendlyError } from "../../api/errors";
 import type { Movie, MoviesMeta } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
+import { useSelector } from "react-redux";
+import { selectAllRatings } from "../../app/store/ratingsSlice";
 import RatingDisplay from "../../components/RatingDisplay";
 import MovieFilters from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
-type SortKey = "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating";
+type MovieWithUserRating = Movie & {
+  userRating: number | undefined;
+};
+
+type SortKey =
+  "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
 type SortDir = "asc" | "desc";
 
 const SORT_ACCESSORS: Record<
   SortKey,
-  (movie: Movie) => string | null | number
+  (movie: MovieWithUserRating) => string | null | number
 > = {
   name: (movie) => movie.name,
   year: (movie) => movie.year,
@@ -26,11 +33,17 @@ const SORT_ACCESSORS: Record<
   imdb: (movie) => movie.imdbRating,
   genre: (movie) => movie.genre,
   avg_rating: (movie) => movie.averageRating,
+  my_rating: (movie) => movie.userRating ?? null,
 };
 
 const TEXT_KEYS: SortKey[] = ["name", "genre"];
 
-function compareMovies(a: Movie, b: Movie, key: SortKey, dir: SortDir) {
+function compareMovies(
+  a: MovieWithUserRating,
+  b: MovieWithUserRating,
+  key: SortKey,
+  dir: SortDir,
+) {
   const av = SORT_ACCESSORS[key](a);
   const bv = SORT_ACCESSORS[key](b);
   if (av === null && bv === null) return 0;
@@ -79,6 +92,8 @@ export default function MoviesList() {
   const yearFilter = parseYearFilter(searchParams.get("year"));
   const genreFilter = parseGenreFilter(searchParams.get("genre"));
 
+  const allRatings = useSelector(selectAllRatings);
+
   useEffect(() => {
     let cancelled = false;
     Promise.all([getMovies(), getMoviesMetaData()])
@@ -97,6 +112,22 @@ export default function MoviesList() {
       cancelled = true;
     };
   }, []);
+
+  const userRatingsMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const rating of allRatings) {
+      map.set(rating.movieId, rating.rating);
+    }
+    return map;
+  }, [allRatings]);
+
+  const moviesWithUserRatings = useMemo(() => {
+    if (!movies) return null;
+    return movies.map((movie) => ({
+      ...movie,
+      userRating: userRatingsMap.get(movie.id),
+    }));
+  }, [movies, userRatingsMap]);
 
   // The watchlist only exists for signed-in users; the auth context
   // resolves asynchronously, so this re-runs when login state settles.
@@ -124,8 +155,8 @@ export default function MoviesList() {
   }, [user]);
 
   const visibleMovies = useMemo(() => {
-    if (movies === null) return null;
-    const filtered = movies.filter(
+    if (moviesWithUserRatings === null) return null;
+    const filtered = moviesWithUserRatings.filter(
       (movie) =>
         (yearFilter === null ||
           (yearFilter === "unknown"
@@ -137,7 +168,7 @@ export default function MoviesList() {
             : movie.genre === genreFilter)),
     );
     return filtered.sort((a, b) => compareMovies(a, b, sortKey, sortDir));
-  }, [movies, yearFilter, genreFilter, sortKey, sortDir]);
+  }, [moviesWithUserRatings, yearFilter, genreFilter, sortKey, sortDir]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -274,7 +305,7 @@ export default function MoviesList() {
                 {sortHeader("genre", "Genre")}
                 {sortHeader("imdb", "IMDb")}
                 {sortHeader("avg_rating", "Theatre Ø")}
-                {user && <th>My rating</th>}
+                {user && sortHeader("my_rating", "My rating")}
                 {user && <th aria-label="Watchlist" />}
               </tr>
             </thead>

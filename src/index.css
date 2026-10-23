@@ -460,3 +460,64 @@ button:disabled {
 .rating-editor__error {
   flex-basis: 100%;
 }
+
+/* --- profile layout --- */
+
+.profile-layout {
+  display: flex;
+  gap: 2rem;
+}
+
+.profile-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidenav {
+  flex: 0 0 160px;
+}
+
+.sidenav__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidenav__link {
+  display: block;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 6px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sidenav__link:hover {
+  color: var(--accent);
+  background: var(--bg);
+}
+
+.sidenav__link--active,
+.sidenav__link--active:hover {
+  color: var(--text);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+/* --- table fixes --- */
+
+.table {
+  table-layout: auto;
+  min-width: 100%;
+}
+
+.table__action {
+  white-space: nowrap;
+}
+
+.table__sort {
+  white-space: nowrap;
+}

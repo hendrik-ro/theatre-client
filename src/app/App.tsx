@@ -12,9 +12,12 @@ import MovieFormPage from "../features/movies/MovieFormPage";
 import MovieDetail from "../features/movies/MovieDetail";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
-import ProfilePage from "../features/auth/ProfilePage";
 import RequireAuth from "../features/auth/RequireAuth";
 import ErrorElement from "../components/ErrorElement";
+import ProfilePage from "../features/profile/ProfilePage";
+import ProfileInfo from "../features/profile/ProfileInfo";
+import ProfileWatchlist from "../features/profile/ProfileWatchlist";
+import ProfileOptions from "../features/profile/ProfileOptions";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? "app__navlink app__navlink--active" : "app__navlink";
@@ -88,7 +91,15 @@ function App() {
           element: <RequireAuth />,
           children: [
             { path: "movies/new", element: <MovieFormPage /> },
-            { path: "profile", element: <ProfilePage /> },
+            {
+              path: "profile",
+              element: <ProfilePage />,
+              children: [
+                { index: true, element: <ProfileInfo /> },
+                { path: "watchlist", element: <ProfileWatchlist /> },
+                { path: "options", element: <ProfileOptions /> },
+              ],
+            },
           ],
         },
         { path: "*", element: <ErrorElement /> },
