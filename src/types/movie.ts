@@ -24,3 +24,20 @@ export interface MoviesMeta {
   moviesPerYear: { year: number | null; count: number }[];
   moviesPerGenre: { genre: string | null; count: number }[];
 }
+
+export interface MoviesPaginated {
+  movies: Movie[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface MovieFilters {
+  year?: number | null;
+  genre?: string | null;
+  imdbRating?: number | null;
+  averageRating?: number | null;
+}
+
+export type RatingFilterValue = "all" | "unrated" | "7+" | "8+" | "9+";
