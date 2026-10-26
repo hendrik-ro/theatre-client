@@ -129,8 +129,7 @@ nginx in front on ports 80/443.
 
 ## Roadmap
 
-- **Pagination** - Paginated movie lists
-  - _blocker:_ backend implementation missing
+- **tbd**
 
 ## Contributing
 

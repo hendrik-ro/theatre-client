@@ -113,13 +113,23 @@ export default function MoviesList() {
   // Fetch paginated movies with server-side filtering
   useEffect(() => {
     let cancelled = false;
+    const requestFilter: Record<string, unknown> = {};
+    if (yearFilter !== null) {
+      requestFilter.year = yearFilter === "unknown" ? null : yearFilter;
+    }
+    if (genreFilter !== null) {
+      requestFilter.genre = genreFilter === "unknown" ? null : genreFilter;
+    }
+    const imdbRating = ratingToServerValue(imdbRatingFilter);
+    if (imdbRating !== undefined) {
+      requestFilter.imdbRating = imdbRating;
+    }
+    const averageRating = ratingToServerValue(averageRatingFilter);
+    if (averageRating !== undefined) {
+      requestFilter.averageRating = averageRating;
+    }
     Promise.all([
-      getMoviesPaginated(currentPage, 20, {
-        year: yearFilter === "unknown" ? null : yearFilter,
-        genre: genreFilter === "unknown" ? null : genreFilter,
-        imdbRating: ratingToServerValue(imdbRatingFilter),
-        averageRating: ratingToServerValue(averageRatingFilter),
-      }),
+      getMoviesPaginated(currentPage, 20, requestFilter),
       getMoviesMetaData(),
     ])
       .then(([paginated, moviesMeta]) => {
