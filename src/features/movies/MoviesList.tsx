@@ -349,7 +349,11 @@ export default function MoviesList() {
         {hasMovies && visibleMovies !== null && visibleMovies.length === 0 && (
           <>
             <p className="muted">No movies match the current filters.</p>
-            <button type="button" onClick={clearAllFilters}>
+            <button
+              type="button"
+              className="filters__clear filters__clear--small"
+              onClick={clearAllFilters}
+            >
               Clear all filters
             </button>
           </>

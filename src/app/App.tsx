@@ -37,9 +37,14 @@ const Layout = () => {
             Library
           </NavLink>
           {user && (
-            <NavLink to="/movies/new" className={navLinkClass}>
-              Add Movie
-            </NavLink>
+            <>
+              <NavLink to="/profile/watchlist" className={navLinkClass}>
+                Watchlist
+              </NavLink>
+              <NavLink to="/movies/new" className={navLinkClass}>
+                Add Movie
+              </NavLink>
+            </>
           )}
         </nav>
         <div className="app__auth">

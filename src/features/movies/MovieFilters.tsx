@@ -134,7 +134,11 @@ export default function MovieFilters({
           ))}
         </select>
       </label>
-      <button type="button" className="filters__clear" onClick={onClearAll}>
+      <button
+        type="button"
+        className="filters__clear filters__clear--small"
+        onClick={onClearAll}
+      >
         Clear all filters
       </button>
     </div>
