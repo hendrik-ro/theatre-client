@@ -246,6 +246,20 @@ button:disabled {
   outline-offset: -1px;
 }
 
+.filters__clear {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.filters__clear:hover {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--text);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

@@ -1,10 +1,41 @@
-import type { Movie, MovieInput, MoviesMeta } from "../types/movie";
+import type {
+  Movie,
+  MovieInput,
+  MoviesMeta,
+  MoviesPaginated,
+  MovieFilters,
+} from "../types/movie";
 import { request } from "./client";
 
 const BASE = "/api/movies";
 
 export function getMovies(): Promise<Movie[]> {
   return request<Movie[]>(BASE);
+}
+
+export function getMoviesPaginated(
+  page: number,
+  limit: number,
+  filters: MovieFilters = {},
+): Promise<MoviesPaginated> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("limit", String(limit));
+
+  if (filters.year !== undefined) {
+    params.set("year", String(filters.year));
+  }
+  if (filters.genre !== undefined) {
+    params.set("genre", filters.genre ?? "");
+  }
+  if (filters.imdbRating !== undefined) {
+    params.set("imdbRating", String(filters.imdbRating));
+  }
+  if (filters.averageRating !== undefined) {
+    params.set("averageRating", String(filters.averageRating));
+  }
+
+  return request<MoviesPaginated>(`${BASE}?${params.toString()}`);
 }
 
 export function getMoviesMetaData(): Promise<MoviesMeta> {

@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getMovies, getMoviesMetaData } from "../../api/movies";
+import { getMoviesPaginated, getMoviesMetaData } from "../../api/movies";
 import {
   addToWatchlist,
   getWatchlist,
   removeFromWatchlist,
 } from "../../api/watchlists";
 import { friendlyError } from "../../api/errors";
-import type { Movie, MoviesMeta } from "../../types/movie";
+import type {
+  Movie,
+  MoviesMeta,
+  MoviesPaginated,
+  RatingFilterValue,
+} from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
 import { useSelector } from "react-redux";
 import { selectAllRatings } from "../../app/store/ratingsSlice";
 import RatingDisplay from "../../components/RatingDisplay";
-import MovieFilters from "./MovieFilters";
+import MovieFilters, {
+  parseRatingFilter,
+  ratingToServerValue,
+} from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
 type MovieWithUserRating = Movie & {
@@ -80,7 +88,8 @@ function filterToParam(value: YearFilter | GenreFilter): string | null {
 
 export default function MoviesList() {
   const { user } = useAuth();
-  const [movies, setMovies] = useState<Movie[] | null>(null);
+  const [moviesPaginated, setMoviesPaginated] =
+    useState<MoviesPaginated | null>(null);
   const [meta, setMeta] = useState<MoviesMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [watchlist, setWatchlist] = useState<Set<string> | null>(null);
@@ -89,17 +98,43 @@ export default function MoviesList() {
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Parse filter values from URL
   const yearFilter = parseYearFilter(searchParams.get("year"));
   const genreFilter = parseGenreFilter(searchParams.get("genre"));
+  const imdbRatingFilter = parseRatingFilter(searchParams.get("imdbRating"));
+  const averageRatingFilter = parseRatingFilter(
+    searchParams.get("averageRating"),
+  );
+  const currentPage = Number(searchParams.get("page") ?? "1");
 
   const allRatings = useSelector(selectAllRatings);
 
+  // Fetch paginated movies with server-side filtering
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getMovies(), getMoviesMetaData()])
-      .then(([movieList, moviesMeta]) => {
+    const requestFilter: Record<string, unknown> = {};
+    if (yearFilter !== null) {
+      requestFilter.year = yearFilter === "unknown" ? null : yearFilter;
+    }
+    if (genreFilter !== null) {
+      requestFilter.genre = genreFilter === "unknown" ? null : genreFilter;
+    }
+    const imdbRating = ratingToServerValue(imdbRatingFilter);
+    if (imdbRating !== undefined) {
+      requestFilter.imdbRating = imdbRating;
+    }
+    const averageRating = ratingToServerValue(averageRatingFilter);
+    if (averageRating !== undefined) {
+      requestFilter.averageRating = averageRating;
+    }
+    Promise.all([
+      getMoviesPaginated(currentPage, 20, requestFilter),
+      getMoviesMetaData(),
+    ])
+      .then(([paginated, moviesMeta]) => {
         if (!cancelled) {
-          setMovies(movieList);
+          setMoviesPaginated(paginated);
           setMeta(moviesMeta);
         }
       })
@@ -111,7 +146,13 @@ export default function MoviesList() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [
+    currentPage,
+    yearFilter,
+    genreFilter,
+    imdbRatingFilter,
+    averageRatingFilter,
+  ]);
 
   const userRatingsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -122,12 +163,12 @@ export default function MoviesList() {
   }, [allRatings]);
 
   const moviesWithUserRatings = useMemo(() => {
-    if (!movies) return null;
-    return movies.map((movie) => ({
+    if (!moviesPaginated) return null;
+    return moviesPaginated.movies.map((movie) => ({
       ...movie,
       userRating: userRatingsMap.get(movie.id),
     }));
-  }, [movies, userRatingsMap]);
+  }, [moviesPaginated, userRatingsMap]);
 
   // The watchlist only exists for signed-in users; the auth context
   // resolves asynchronously, so this re-runs when login state settles.
@@ -154,21 +195,13 @@ export default function MoviesList() {
     };
   }, [user]);
 
+  // Server handles filtering, we just sort the results
   const visibleMovies = useMemo(() => {
     if (moviesWithUserRatings === null) return null;
-    const filtered = moviesWithUserRatings.filter(
-      (movie) =>
-        (yearFilter === null ||
-          (yearFilter === "unknown"
-            ? movie.year === null
-            : movie.year === yearFilter)) &&
-        (genreFilter === null ||
-          (genreFilter === "unknown"
-            ? movie.genre === null
-            : movie.genre === genreFilter)),
+    return moviesWithUserRatings.sort((a, b) =>
+      compareMovies(a, b, sortKey, sortDir),
     );
-    return filtered.sort((a, b) => compareMovies(a, b, sortKey, sortDir));
-  }, [moviesWithUserRatings, yearFilter, genreFilter, sortKey, sortDir]);
+  }, [moviesWithUserRatings, sortKey, sortDir]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -232,14 +265,37 @@ export default function MoviesList() {
     } else {
       next.set(key, value);
     }
+    // Reset to page 1 when filters change
+    next.delete("page");
     setSearchParams(next);
   }
 
-  function clearFilters() {
+  function setRatingFilterParam(
+    key: "imdbRating" | "averageRating",
+    value: RatingFilterValue,
+  ) {
+    const next = new URLSearchParams(searchParams);
+    if (value === "all") {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+    // Reset to page 1 when filters change
+    next.delete("page");
+    setSearchParams(next);
+  }
+
+  function clearAllFilters() {
     setSearchParams({});
   }
 
-  const hasMovies = (movies?.length ?? 0) > 0;
+  function goToPage(page: number) {
+    const next = new URLSearchParams(searchParams);
+    next.set("page", String(page));
+    setSearchParams(next);
+  }
+
+  const hasMovies = (moviesPaginated?.total ?? 0) > 0;
 
   return (
     <section className="page">
@@ -261,92 +317,138 @@ export default function MoviesList() {
         {user && watchlistError && (
           <p className="form__error">{watchlistError}</p>
         )}
-        {movies === null && !error && <p className="muted">Loading…</p>}
-        {movies !== null && movies.length === 0 && (
-          <>
-            <p className="muted">No movies yet.</p>
-            {user ? (
-              <Link className="panel__action" to="/movies/new">
-                Add the first movie
-              </Link>
-            ) : (
-              <Link className="panel__action" to="/login">
-                Log in to add movies
-              </Link>
-            )}
-          </>
+        {moviesPaginated === null && meta === null && !error && (
+          <p className="muted">Loading…</p>
         )}
+        {moviesPaginated !== null &&
+          meta !== null &&
+          moviesPaginated.total === 0 && (
+            <>
+              <p className="muted">No movies yet.</p>
+              {user ? (
+                <Link className="panel__action" to="/movies/new">
+                  Add the first movie
+                </Link>
+              ) : (
+                <Link className="panel__action" to="/login">
+                  Log in to add movies
+                </Link>
+              )}
+            </>
+          )}
         {meta !== null && hasMovies && (
           <MovieFilters
             meta={meta}
             year={yearFilter}
             genre={genreFilter}
+            imdbRating={imdbRatingFilter}
+            averageRating={averageRatingFilter}
             onYearChange={(year) => setFilterParam("year", filterToParam(year))}
             onGenreChange={(genre) =>
               setFilterParam("genre", filterToParam(genre))
             }
+            onImdbRatingChange={(rating) =>
+              setRatingFilterParam("imdbRating", rating)
+            }
+            onAverageRatingChange={(rating) =>
+              setRatingFilterParam("averageRating", rating)
+            }
+            onClearAll={clearAllFilters}
           />
         )}
         {hasMovies && visibleMovies !== null && visibleMovies.length === 0 && (
           <>
             <p className="muted">No movies match the current filters.</p>
-            <button type="button" onClick={clearFilters}>
-              Clear filters
+            <button
+              type="button"
+              className="filters__clear filters__clear--small"
+              onClick={clearAllFilters}
+            >
+              Clear all filters
             </button>
           </>
         )}
         {visibleMovies !== null && visibleMovies.length > 0 && (
-          <table className="table">
-            <thead>
-              <tr>
-                {sortHeader("name", "Name")}
-                {sortHeader("year", "Year")}
-                {sortHeader("runtime", "Runtime")}
-                {sortHeader("genre", "Genre")}
-                {sortHeader("imdb", "IMDb")}
-                {sortHeader("avg_rating", "Theatre Ø")}
-                {user && sortHeader("my_rating", "My rating")}
-                {user && <th aria-label="Watchlist" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleMovies.map((movie) => (
-                <tr key={movie.id}>
-                  <td>
-                    <Link to={`/movies/${movie.id}`} className="table__link">
-                      {movie.name}
-                    </Link>
-                  </td>
-                  <td>{movie.year ?? "-"}</td>
-                  <td>
-                    {movie.runtime !== null ? `${movie.runtime} min` : "-"}
-                  </td>
-                  <td>{movie.genre ?? "-"}</td>
-                  <td>{movie.imdbRating ?? "-"}</td>
-                  <td>{movie.ratingCount >= 2 ? movie.averageRating : "-"}</td>
-                  {user && (
-                    <td>
-                      <RatingDisplay movieId={movie.id} />
-                    </td>
-                  )}
-                  {user && (
-                    <td>
-                      <button
-                        type="button"
-                        className="table__action"
-                        onClick={() => void toggleWatchlist(movie)}
-                        disabled={pendingId !== null}
-                      >
-                        {watchlist?.has(movie.id)
-                          ? "Remove from watchlist"
-                          : "Add to watchlist"}
-                      </button>
-                    </td>
-                  )}
+          <>
+            <table className="table">
+              <thead>
+                <tr>
+                  {sortHeader("name", "Name")}
+                  {sortHeader("year", "Year")}
+                  {sortHeader("runtime", "Runtime")}
+                  {sortHeader("genre", "Genre")}
+                  {sortHeader("imdb", "IMDb")}
+                  {sortHeader("avg_rating", "Theatre Ø")}
+                  {user && sortHeader("my_rating", "My rating")}
+                  {user && <th aria-label="Watchlist" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visibleMovies.map((movie) => (
+                  <tr key={movie.id}>
+                    <td>
+                      <Link to={`/movies/${movie.id}`} className="table__link">
+                        {movie.name}
+                      </Link>
+                    </td>
+                    <td>{movie.year ?? "-"}</td>
+                    <td>
+                      {movie.runtime !== null ? `${movie.runtime} min` : "-"}
+                    </td>
+                    <td>{movie.genre ?? "-"}</td>
+                    <td>{movie.imdbRating ?? "-"}</td>
+                    <td>
+                      {movie.ratingCount >= 2 ? movie.averageRating : "-"}
+                    </td>
+                    {user && (
+                      <td>
+                        <RatingDisplay movieId={movie.id} />
+                      </td>
+                    )}
+                    {user && (
+                      <td>
+                        <button
+                          type="button"
+                          className="table__action"
+                          onClick={() => void toggleWatchlist(movie)}
+                          disabled={pendingId !== null}
+                        >
+                          {watchlist?.has(movie.id)
+                            ? "Remove from watchlist"
+                            : "Add to watchlist"}
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {moviesPaginated && moviesPaginated.totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  type="button"
+                  className="pagination__button"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >
+                  Previous
+                </button>
+                <span className="pagination__info">
+                  Page {currentPage} of {moviesPaginated.totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="pagination__button"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === moviesPaginated.totalPages}
+                  aria-label="Next page"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
