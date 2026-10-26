@@ -97,6 +97,7 @@ export default function MoviesList() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Parse filter values from URL
@@ -195,13 +196,21 @@ export default function MoviesList() {
     };
   }, [user]);
 
-  // Server handles filtering, we just sort the results
+  // Server handles filtering, we just sort and search the results
   const visibleMovies = useMemo(() => {
     if (moviesWithUserRatings === null) return null;
-    return moviesWithUserRatings.sort((a, b) =>
-      compareMovies(a, b, sortKey, sortDir),
-    );
-  }, [moviesWithUserRatings, sortKey, sortDir]);
+    let filtered = moviesWithUserRatings;
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((movie) =>
+        movie.name.toLowerCase().includes(query),
+      );
+    }
+
+    return filtered.sort((a, b) => compareMovies(a, b, sortKey, sortDir));
+  }, [moviesWithUserRatings, sortKey, sortDir, searchQuery]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -337,35 +346,74 @@ export default function MoviesList() {
             </>
           )}
         {meta !== null && hasMovies && (
-          <MovieFilters
-            meta={meta}
-            year={yearFilter}
-            genre={genreFilter}
-            imdbRating={imdbRatingFilter}
-            averageRating={averageRatingFilter}
-            onYearChange={(year) => setFilterParam("year", filterToParam(year))}
-            onGenreChange={(genre) =>
-              setFilterParam("genre", filterToParam(genre))
-            }
-            onImdbRatingChange={(rating) =>
-              setRatingFilterParam("imdbRating", rating)
-            }
-            onAverageRatingChange={(rating) =>
-              setRatingFilterParam("averageRating", rating)
-            }
-            onClearAll={clearAllFilters}
-          />
+          <>
+            <div className="filters">
+              <label className="filters__field">
+                <span>Search</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by movie name..."
+                  className="input"
+                />
+              </label>
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="filters__clear filters__clear--small"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <MovieFilters
+              meta={meta}
+              year={yearFilter}
+              genre={genreFilter}
+              imdbRating={imdbRatingFilter}
+              averageRating={averageRatingFilter}
+              onYearChange={(year) =>
+                setFilterParam("year", filterToParam(year))
+              }
+              onGenreChange={(genre) =>
+                setFilterParam("genre", filterToParam(genre))
+              }
+              onImdbRatingChange={(rating) =>
+                setRatingFilterParam("imdbRating", rating)
+              }
+              onAverageRatingChange={(rating) =>
+                setRatingFilterParam("averageRating", rating)
+              }
+              onClearAll={clearAllFilters}
+            />
+          </>
         )}
         {hasMovies && visibleMovies !== null && visibleMovies.length === 0 && (
           <>
-            <p className="muted">No movies match the current filters.</p>
-            <button
-              type="button"
-              className="filters__clear filters__clear--small"
-              onClick={clearAllFilters}
-            >
-              Clear all filters
-            </button>
+            <p className="muted">
+              {searchQuery
+                ? "No movies match your search."
+                : "No movies match the current filters."}
+            </p>
+            {searchQuery ? (
+              <button
+                type="button"
+                className="filters__clear filters__clear--small"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear search
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="filters__clear filters__clear--small"
+                onClick={clearAllFilters}
+              >
+                Clear all filters
+              </button>
+            )}
           </>
         )}
         {visibleMovies !== null && visibleMovies.length > 0 && (

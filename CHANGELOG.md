@@ -1,15 +1,13 @@
 # [1.6.0](https://github.com/hendrik-ro/theatre-client/compare/v1.5.0...v1.6.0) (2026-10-26)
 
-
 ### Bug Fixes
 
-* **movies:** distinguish no filter vs filter for NULL ([993f669](https://github.com/hendrik-ro/theatre-client/commit/993f669d0ead3b2daf85d4b9de01f84cfcfda999))
-
+- **movies:** distinguish no filter vs filter for NULL ([993f669](https://github.com/hendrik-ro/theatre-client/commit/993f669d0ead3b2daf85d4b9de01f84cfcfda999))
 
 ### Features
 
-* **movies:** pagination + filters WIP ([0c46dd7](https://github.com/hendrik-ro/theatre-client/commit/0c46dd7a83f233c8028098e03102ecc9c2dacb8b))
-* **watchlist:** nav link to watchlist, less prominent clear filters button ([68ecaf3](https://github.com/hendrik-ro/theatre-client/commit/68ecaf3cf13a38b77bad1e97a3d390a927b728cf))
+- **movies:** pagination + filters WIP ([0c46dd7](https://github.com/hendrik-ro/theatre-client/commit/0c46dd7a83f233c8028098e03102ecc9c2dacb8b))
+- **watchlist:** nav link to watchlist, less prominent clear filters button ([68ecaf3](https://github.com/hendrik-ro/theatre-client/commit/68ecaf3cf13a38b77bad1e97a3d390a927b728cf))
 
 # [1.5.0](https://github.com/hendrik-ro/theatre-client/compare/v1.4.0...v1.5.0) (2026-10-23)
 

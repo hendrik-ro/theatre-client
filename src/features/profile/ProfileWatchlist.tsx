@@ -55,6 +55,7 @@ export default function ProfileWatchlist() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const allRatings = useSelector(selectAllRatings);
 
@@ -121,10 +122,18 @@ export default function ProfileWatchlist() {
 
   const sortedMovies = useMemo(() => {
     if (!moviesWithUserRatings) return null;
-    return [...moviesWithUserRatings].sort((a, b) =>
-      compareMovies(a, b, sortKey, sortDir),
-    );
-  }, [moviesWithUserRatings, sortKey, sortDir]);
+    let filtered = moviesWithUserRatings;
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((movie) =>
+        movie.name.toLowerCase().includes(query),
+      );
+    }
+
+    return [...filtered].sort((a, b) => compareMovies(a, b, sortKey, sortDir));
+  }, [moviesWithUserRatings, sortKey, sortDir, searchQuery]);
 
   function sortHeader(key: SortKey, label: string) {
     const active = sortKey === key;
@@ -160,50 +169,78 @@ export default function ProfileWatchlist() {
         </p>
       )}
       {sortedMovies !== null && sortedMovies.length > 0 && (
-        <table className="table">
-          <thead>
-            <tr>
-              {sortHeader("name", "Name")}
-              {sortHeader("year", "Year")}
-              {sortHeader("runtime", "Runtime")}
-              {sortHeader("genre", "Genre")}
-              {sortHeader("imdb", "IMDb")}
-              {sortHeader("avg_rating", "Theatre Ø")}
-              {sortHeader("my_rating", "My rating")}
-              <th aria-label="Remove" />
-            </tr>
-          </thead>
-          <tbody>
-            {sortedMovies.map((entry) => (
-              <tr key={entry.id}>
-                <td>
-                  <Link to={`/movies/${entry.id}`} className="table__link">
-                    {entry.name}
-                  </Link>
-                </td>
-                <td>{entry.year ?? "-"}</td>
-                <td>{entry.runtime !== null ? `${entry.runtime} min` : "-"}</td>
-                <td>{entry.genre ?? "-"}</td>
-                <td>{entry.imdbRating ?? "-"}</td>
-                <td>{entry.ratingCount >= 2 ? entry.averageRating : "-"}</td>
-                <td>
-                  <RatingDisplay movieId={entry.id} />
-                </td>
-                <td>
-                  <button
-                    type="button"
-                    className="table__action table__action--danger"
-                    aria-label={`Remove ${entry.name} from watchlist`}
-                    onClick={() => void handleRemoveFromWatchlist(entry)}
-                    disabled={removingId !== null}
-                  >
-                    x
-                  </button>
-                </td>
+        <>
+          <div className="filters">
+            <label className="filters__field">
+              <span>Search Watchlist</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by movie name..."
+                className="input"
+              />
+            </label>
+            {searchQuery && (
+              <button
+                type="button"
+                className="filters__clear filters__clear--small"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <table className="table">
+            <thead>
+              <tr>
+                {sortHeader("name", "Name")}
+                {sortHeader("year", "Year")}
+                {sortHeader("runtime", "Runtime")}
+                {sortHeader("genre", "Genre")}
+                {sortHeader("imdb", "IMDb")}
+                {sortHeader("avg_rating", "Theatre Ø")}
+                {sortHeader("my_rating", "My rating")}
+                <th aria-label="Remove" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sortedMovies.map((entry) => (
+                <tr key={entry.id}>
+                  <td>
+                    <Link to={`/movies/${entry.id}`} className="table__link">
+                      {entry.name}
+                    </Link>
+                  </td>
+                  <td>{entry.year ?? "-"}</td>
+                  <td>
+                    {entry.runtime !== null ? `${entry.runtime} min` : "-"}
+                  </td>
+                  <td>{entry.genre ?? "-"}</td>
+                  <td>{entry.imdbRating ?? "-"}</td>
+                  <td>{entry.ratingCount >= 2 ? entry.averageRating : "-"}</td>
+                  <td>
+                    <RatingDisplay movieId={entry.id} />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="table__action table__action--danger"
+                      aria-label={`Remove ${entry.name} from watchlist`}
+                      onClick={() => void handleRemoveFromWatchlist(entry)}
+                      disabled={removingId !== null}
+                    >
+                      x
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+      {sortedMovies !== null && sortedMovies.length === 0 && searchQuery && (
+        <p className="muted">No movies match your search.</p>
       )}
     </div>
   );
