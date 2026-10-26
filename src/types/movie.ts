@@ -38,6 +38,7 @@ export interface MovieFilters {
   genre?: string | null;
   imdbRating?: number | null;
   averageRating?: number | null;
+  search?: string;
 }
 
 export type RatingFilterValue = "all" | "unrated" | "7+" | "8+" | "9+";

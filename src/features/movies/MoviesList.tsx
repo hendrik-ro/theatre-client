@@ -23,45 +23,9 @@ import MovieFilters, {
 } from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
 
-type MovieWithUserRating = Movie & {
-  userRating: number | undefined;
-};
-
 type SortKey =
   "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
 type SortDir = "asc" | "desc";
-
-const SORT_ACCESSORS: Record<
-  SortKey,
-  (movie: MovieWithUserRating) => string | null | number
-> = {
-  name: (movie) => movie.name,
-  year: (movie) => movie.year,
-  runtime: (movie) => movie.runtime,
-  imdb: (movie) => movie.imdbRating,
-  genre: (movie) => movie.genre,
-  avg_rating: (movie) => movie.averageRating,
-  my_rating: (movie) => movie.userRating ?? null,
-};
-
-const TEXT_KEYS: SortKey[] = ["name", "genre"];
-
-function compareMovies(
-  a: MovieWithUserRating,
-  b: MovieWithUserRating,
-  key: SortKey,
-  dir: SortDir,
-) {
-  const av = SORT_ACCESSORS[key](a);
-  const bv = SORT_ACCESSORS[key](b);
-  if (av === null && bv === null) return 0;
-  if (av === null) return 1;
-  if (bv === null) return -1;
-  const cmp = TEXT_KEYS.includes(key)
-    ? String(av).localeCompare(String(bv))
-    : Number(av) - Number(bv);
-  return dir === "asc" ? cmp : -cmp;
-}
 
 // Filters live in the URL (?year=, ?genre=) so filtered views are
 // shareable, bookmarkable, and survive refresh and back/forward
@@ -95,12 +59,9 @@ export default function MoviesList() {
   const [watchlist, setWatchlist] = useState<Set<string> | null>(null);
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("year");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Parse filter values from URL
+  // Parse filter and sort values from URL
   const yearFilter = parseYearFilter(searchParams.get("year"));
   const genreFilter = parseGenreFilter(searchParams.get("genre"));
   const imdbRatingFilter = parseRatingFilter(searchParams.get("imdbRating"));
@@ -108,6 +69,26 @@ export default function MoviesList() {
     searchParams.get("averageRating"),
   );
   const currentPage = Number(searchParams.get("page") ?? "1");
+  const sortKey = (searchParams.get("sortBy") as SortKey) || "year";
+  const sortDir = (searchParams.get("sortDir") as SortDir) || "asc";
+  const searchQuery = searchParams.get("search") || "";
+  const [inputValue, setInputValue] = useState(searchQuery);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      if (inputValue) {
+        params.set("search", inputValue);
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      setSearchParams(params);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [inputValue, searchParams, setSearchParams]);
 
   const allRatings = useSelector(selectAllRatings);
 
@@ -129,8 +110,14 @@ export default function MoviesList() {
     if (averageRating !== undefined) {
       requestFilter.averageRating = averageRating;
     }
+    if (searchQuery) {
+      requestFilter.search = searchQuery;
+    }
     Promise.all([
-      getMoviesPaginated(currentPage, 20, requestFilter),
+      getMoviesPaginated(currentPage, 20, requestFilter, {
+        sortBy: sortKey,
+        sortDir,
+      }),
       getMoviesMetaData(),
     ])
       .then(([paginated, moviesMeta]) => {
@@ -153,6 +140,9 @@ export default function MoviesList() {
     genreFilter,
     imdbRatingFilter,
     averageRatingFilter,
+    searchQuery,
+    sortKey,
+    sortDir,
   ]);
 
   const userRatingsMap = useMemo(() => {
@@ -196,29 +186,22 @@ export default function MoviesList() {
     };
   }, [user]);
 
-  // Server handles filtering, we just sort and search the results
+  // Server handles filtering, sorting, and searching
   const visibleMovies = useMemo(() => {
     if (moviesWithUserRatings === null) return null;
-    let filtered = moviesWithUserRatings;
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((movie) =>
-        movie.name.toLowerCase().includes(query),
-      );
-    }
-
-    return filtered.sort((a, b) => compareMovies(a, b, sortKey, sortDir));
-  }, [moviesWithUserRatings, sortKey, sortDir, searchQuery]);
+    return moviesWithUserRatings;
+  }, [moviesWithUserRatings]);
 
   function handleSort(key: SortKey) {
+    const params = new URLSearchParams(searchParams);
     if (key === sortKey) {
-      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      params.set("sortDir", sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortKey(key);
-      setSortDir("asc");
+      params.set("sortBy", key);
+      params.set("sortDir", "asc");
     }
+    params.delete("page");
+    setSearchParams(params);
   }
 
   // Optimistic toggle: the local set flips immediately and rolls back
@@ -352,8 +335,8 @@ export default function MoviesList() {
                 <span>Search</span>
                 <input
                   type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Search by movie name..."
                   className="input"
                 />
@@ -362,7 +345,7 @@ export default function MoviesList() {
                 <button
                   type="button"
                   className="filters__clear filters__clear--small"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => setInputValue("")}
                 >
                   Clear
                 </button>
@@ -401,7 +384,7 @@ export default function MoviesList() {
               <button
                 type="button"
                 className="filters__clear filters__clear--small"
-                onClick={() => setSearchQuery("")}
+                onClick={() => setInputValue("")}
               >
                 Clear search
               </button>
