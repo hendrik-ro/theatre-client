@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getMoviesPaginated, getMoviesMetaData } from "../../api/movies";
 import {
@@ -14,14 +14,13 @@ import type {
   RatingFilterValue,
 } from "../../types/movie";
 import { useAuth } from "../../app/AuthContext";
-import { useSelector } from "react-redux";
-import { selectAllRatings } from "../../app/store/ratingsSlice";
-import RatingDisplay from "../../components/RatingDisplay";
 import MovieFilters, {
   parseRatingFilter,
   ratingToServerValue,
 } from "./MovieFilters";
 import type { GenreFilter, YearFilter } from "./MovieFilters";
+import MovieTable from "../../components/MovieTable";
+import useMoviesWithUserRatings from "../../hooks/useMoviesWithUserRatings";
 
 type SortKey =
   "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
@@ -74,8 +73,9 @@ export default function MoviesList() {
   const searchQuery = searchParams.get("search") || "";
   const [inputValue, setInputValue] = useState(searchQuery);
 
-  // Debounce search input
+  // Debounce search input - only fire when inputValue differs from searchQuery
   useEffect(() => {
+    if (inputValue === searchQuery) return;
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams);
       if (inputValue) {
@@ -88,9 +88,7 @@ export default function MoviesList() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [inputValue, searchParams, setSearchParams]);
-
-  const allRatings = useSelector(selectAllRatings);
+  }, [inputValue, searchQuery, searchParams, setSearchParams]);
 
   // Fetch paginated movies with server-side filtering
   useEffect(() => {
@@ -145,21 +143,9 @@ export default function MoviesList() {
     sortDir,
   ]);
 
-  const userRatingsMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const rating of allRatings) {
-      map.set(rating.movieId, rating.rating);
-    }
-    return map;
-  }, [allRatings]);
-
-  const moviesWithUserRatings = useMemo(() => {
-    if (!moviesPaginated) return null;
-    return moviesPaginated.movies.map((movie) => ({
-      ...movie,
-      userRating: userRatingsMap.get(movie.id),
-    }));
-  }, [moviesPaginated, userRatingsMap]);
+  const moviesWithUserRatings = useMoviesWithUserRatings(
+    moviesPaginated?.movies ?? null,
+  );
 
   // The watchlist only exists for signed-in users; the auth context
   // resolves asynchronously, so this re-runs when login state settles.
@@ -185,12 +171,6 @@ export default function MoviesList() {
       cancelled = true;
     };
   }, [user]);
-
-  // Server handles filtering, sorting, and searching
-  const visibleMovies = useMemo(() => {
-    if (moviesWithUserRatings === null) return null;
-    return moviesWithUserRatings;
-  }, [moviesWithUserRatings]);
 
   function handleSort(key: SortKey) {
     const params = new URLSearchParams(searchParams);
@@ -228,26 +208,6 @@ export default function MoviesList() {
     } finally {
       setPendingId(null);
     }
-  }
-
-  function sortHeader(key: SortKey, label: string) {
-    const active = sortKey === key;
-    return (
-      <th
-        aria-sort={
-          active ? (sortDir === "asc" ? "ascending" : "descending") : "none"
-        }
-      >
-        <button
-          type="button"
-          className={active ? "table__sort table__sort--active" : "table__sort"}
-          onClick={() => handleSort(key)}
-        >
-          {label}
-          {active && (sortDir === "asc" ? " \u2191" : " \u2193")}
-        </button>
-      </th>
-    );
   }
 
   function setFilterParam(key: "year" | "genre", value: string | null) {
@@ -308,7 +268,7 @@ export default function MoviesList() {
           <p className="form__error">{watchlistError}</p>
         )}
         {moviesPaginated === null && meta === null && !error && (
-          <p className="muted">Loading…</p>
+          <p className="muted">Loading\u2026</p>
         )}
         {meta !== null && meta.totalMovies === 0 && (
           <>
@@ -371,8 +331,8 @@ export default function MoviesList() {
         )}
         {meta !== null &&
           meta.totalMovies > 0 &&
-          visibleMovies !== null &&
-          visibleMovies.length === 0 && (
+          moviesWithUserRatings !== null &&
+          moviesWithUserRatings.length === 0 && (
             <>
               <p className="muted">
                 {searchQuery
@@ -400,65 +360,20 @@ export default function MoviesList() {
           )}
         {meta !== null &&
           meta.totalMovies > 0 &&
-          visibleMovies !== null &&
-          visibleMovies.length > 0 && (
+          moviesWithUserRatings !== null &&
+          moviesWithUserRatings.length > 0 && (
             <>
-              <table className="table">
-                <thead>
-                  <tr>
-                    {sortHeader("name", "Name")}
-                    {sortHeader("year", "Year")}
-                    {sortHeader("runtime", "Runtime")}
-                    {sortHeader("genre", "Genre")}
-                    {sortHeader("imdb", "IMDb")}
-                    {sortHeader("avg_rating", "Theatre Ø")}
-                    {user && sortHeader("my_rating", "My rating")}
-                    {user && <th aria-label="Watchlist" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleMovies.map((movie) => (
-                    <tr key={movie.id}>
-                      <td>
-                        <Link
-                          to={`/movies/${movie.id}`}
-                          className="table__link"
-                        >
-                          {movie.name}
-                        </Link>
-                      </td>
-                      <td>{movie.year ?? "-"}</td>
-                      <td>
-                        {movie.runtime !== null ? `${movie.runtime} min` : "-"}
-                      </td>
-                      <td>{movie.genre ?? "-"}</td>
-                      <td>{movie.imdbRating ?? "-"}</td>
-                      <td>
-                        {movie.ratingCount >= 2 ? movie.averageRating : "-"}
-                      </td>
-                      {user && (
-                        <td>
-                          <RatingDisplay movieId={movie.id} />
-                        </td>
-                      )}
-                      {user && (
-                        <td>
-                          <button
-                            type="button"
-                            className="table__action"
-                            onClick={() => void toggleWatchlist(movie)}
-                            disabled={pendingId !== null}
-                          >
-                            {watchlist?.has(movie.id)
-                              ? "x"
-                              : "Add to watchlist"}
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <MovieTable
+                movies={moviesWithUserRatings}
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={handleSort}
+                showUserRating={!!user}
+                user={!!user}
+                watchlist={watchlist}
+                onToggleWatchlist={toggleWatchlist}
+                pendingId={pendingId}
+              />
               {moviesPaginated && moviesPaginated.totalPages > 1 && (
                 <div className="pagination">
                   <button
