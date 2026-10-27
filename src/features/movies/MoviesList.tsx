@@ -287,8 +287,6 @@ export default function MoviesList() {
     setSearchParams(next);
   }
 
-  const hasMovies = (moviesPaginated?.total ?? 0) > 0;
-
   return (
     <section className="page">
       <header className="page__header page__header--row">
@@ -312,23 +310,21 @@ export default function MoviesList() {
         {moviesPaginated === null && meta === null && !error && (
           <p className="muted">Loading…</p>
         )}
-        {moviesPaginated !== null &&
-          meta !== null &&
-          moviesPaginated.total === 0 && (
-            <>
-              <p className="muted">No movies yet.</p>
-              {user ? (
-                <Link className="panel__action" to="/movies/new">
-                  Add the first movie
-                </Link>
-              ) : (
-                <Link className="panel__action" to="/login">
-                  Log in to add movies
-                </Link>
-              )}
-            </>
-          )}
-        {meta !== null && hasMovies && (
+        {meta !== null && meta.totalMovies === 0 && (
+          <>
+            <p className="muted">No movies yet.</p>
+            {user ? (
+              <Link className="panel__action" to="/movies/new">
+                Add the first movie
+              </Link>
+            ) : (
+              <Link className="panel__action" to="/login">
+                Log in to add movies
+              </Link>
+            )}
+          </>
+        )}
+        {meta !== null && (
           <>
             <div className="filters">
               <label className="filters__field">
@@ -373,114 +369,123 @@ export default function MoviesList() {
             />
           </>
         )}
-        {hasMovies && visibleMovies !== null && visibleMovies.length === 0 && (
-          <>
-            <p className="muted">
-              {searchQuery
-                ? "No movies match your search."
-                : "No movies match the current filters."}
-            </p>
-            {searchQuery ? (
-              <button
-                type="button"
-                className="filters__clear filters__clear--small"
-                onClick={() => setInputValue("")}
-              >
-                Clear search
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="filters__clear filters__clear--small"
-                onClick={clearAllFilters}
-              >
-                Clear all filters
-              </button>
-            )}
-          </>
-        )}
-        {visibleMovies !== null && visibleMovies.length > 0 && (
-          <>
-            <table className="table">
-              <thead>
-                <tr>
-                  {sortHeader("name", "Name")}
-                  {sortHeader("year", "Year")}
-                  {sortHeader("runtime", "Runtime")}
-                  {sortHeader("genre", "Genre")}
-                  {sortHeader("imdb", "IMDb")}
-                  {sortHeader("avg_rating", "Theatre Ø")}
-                  {user && sortHeader("my_rating", "My rating")}
-                  {user && <th aria-label="Watchlist" />}
-                </tr>
-              </thead>
-              <tbody>
-                {visibleMovies.map((movie) => (
-                  <tr key={movie.id}>
-                    <td>
-                      <Link to={`/movies/${movie.id}`} className="table__link">
-                        {movie.name}
-                      </Link>
-                    </td>
-                    <td>{movie.year ?? "-"}</td>
-                    <td>
-                      {movie.runtime !== null ? `${movie.runtime} min` : "-"}
-                    </td>
-                    <td>{movie.genre ?? "-"}</td>
-                    <td>{movie.imdbRating ?? "-"}</td>
-                    <td>
-                      {movie.ratingCount >= 2 ? movie.averageRating : "-"}
-                    </td>
-                    {user && (
-                      <td>
-                        <RatingDisplay movieId={movie.id} />
-                      </td>
-                    )}
-                    {user && (
-                      <td>
-                        <button
-                          type="button"
-                          className="table__action"
-                          onClick={() => void toggleWatchlist(movie)}
-                          disabled={pendingId !== null}
-                        >
-                          {watchlist?.has(movie.id)
-                            ? "Remove from watchlist"
-                            : "Add to watchlist"}
-                        </button>
-                      </td>
-                    )}
+        {meta !== null &&
+          meta.totalMovies > 0 &&
+          visibleMovies !== null &&
+          visibleMovies.length === 0 && (
+            <>
+              <p className="muted">
+                {searchQuery
+                  ? "No movies match your search."
+                  : "No movies match the current filters."}
+              </p>
+              {searchQuery ? (
+                <button
+                  type="button"
+                  className="filters__clear filters__clear--small"
+                  onClick={() => setInputValue("")}
+                >
+                  Clear search
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="filters__clear filters__clear--small"
+                  onClick={clearAllFilters}
+                >
+                  Clear all filters
+                </button>
+              )}
+            </>
+          )}
+        {meta !== null &&
+          meta.totalMovies > 0 &&
+          visibleMovies !== null &&
+          visibleMovies.length > 0 && (
+            <>
+              <table className="table">
+                <thead>
+                  <tr>
+                    {sortHeader("name", "Name")}
+                    {sortHeader("year", "Year")}
+                    {sortHeader("runtime", "Runtime")}
+                    {sortHeader("genre", "Genre")}
+                    {sortHeader("imdb", "IMDb")}
+                    {sortHeader("avg_rating", "Theatre Ø")}
+                    {user && sortHeader("my_rating", "My rating")}
+                    {user && <th aria-label="Watchlist" />}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {moviesPaginated && moviesPaginated.totalPages > 1 && (
-              <div className="pagination">
-                <button
-                  type="button"
-                  className="pagination__button"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  aria-label="Previous page"
-                >
-                  Previous
-                </button>
-                <span className="pagination__info">
-                  Page {currentPage} of {moviesPaginated.totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="pagination__button"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === moviesPaginated.totalPages}
-                  aria-label="Next page"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
+                </thead>
+                <tbody>
+                  {visibleMovies.map((movie) => (
+                    <tr key={movie.id}>
+                      <td>
+                        <Link
+                          to={`/movies/${movie.id}`}
+                          className="table__link"
+                        >
+                          {movie.name}
+                        </Link>
+                      </td>
+                      <td>{movie.year ?? "-"}</td>
+                      <td>
+                        {movie.runtime !== null ? `${movie.runtime} min` : "-"}
+                      </td>
+                      <td>{movie.genre ?? "-"}</td>
+                      <td>{movie.imdbRating ?? "-"}</td>
+                      <td>
+                        {movie.ratingCount >= 2 ? movie.averageRating : "-"}
+                      </td>
+                      {user && (
+                        <td>
+                          <RatingDisplay movieId={movie.id} />
+                        </td>
+                      )}
+                      {user && (
+                        <td>
+                          <button
+                            type="button"
+                            className="table__action"
+                            onClick={() => void toggleWatchlist(movie)}
+                            disabled={pendingId !== null}
+                          >
+                            {watchlist?.has(movie.id)
+                              ? "x"
+                              : "Add to watchlist"}
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {moviesPaginated && moviesPaginated.totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    type="button"
+                    className="pagination__button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label="Previous page"
+                  >
+                    Previous
+                  </button>
+                  <span className="pagination__info">
+                    Page {currentPage} of {moviesPaginated.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="pagination__button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === moviesPaginated.totalPages}
+                    aria-label="Next page"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
       </div>
     </section>
   );

@@ -168,7 +168,7 @@ export default function ProfileWatchlist() {
           <Link to="/">Browse movies to add some.</Link>
         </p>
       )}
-      {sortedMovies !== null && sortedMovies.length > 0 && (
+      {sortedMovies !== null && (
         <>
           <div className="filters">
             <label className="filters__field">
@@ -191,56 +191,60 @@ export default function ProfileWatchlist() {
               </button>
             )}
           </div>
-          <table className="table">
-            <thead>
-              <tr>
-                {sortHeader("name", "Name")}
-                {sortHeader("year", "Year")}
-                {sortHeader("runtime", "Runtime")}
-                {sortHeader("genre", "Genre")}
-                {sortHeader("imdb", "IMDb")}
-                {sortHeader("avg_rating", "Theatre Ø")}
-                {sortHeader("my_rating", "My rating")}
-                <th aria-label="Remove" />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedMovies.map((entry) => (
-                <tr key={entry.id}>
-                  <td>
-                    <Link to={`/movies/${entry.id}`} className="table__link">
-                      {entry.name}
-                    </Link>
-                  </td>
-                  <td>{entry.year ?? "-"}</td>
-                  <td>
-                    {entry.runtime !== null ? `${entry.runtime} min` : "-"}
-                  </td>
-                  <td>{entry.genre ?? "-"}</td>
-                  <td>{entry.imdbRating ?? "-"}</td>
-                  <td>{entry.ratingCount >= 2 ? entry.averageRating : "-"}</td>
-                  <td>
-                    <RatingDisplay movieId={entry.id} />
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="table__action table__action--danger"
-                      aria-label={`Remove ${entry.name} from watchlist`}
-                      onClick={() => void handleRemoveFromWatchlist(entry)}
-                      disabled={removingId !== null}
-                    >
-                      x
-                    </button>
-                  </td>
+          {sortedMovies.length > 0 && (
+            <table className="table">
+              <thead>
+                <tr>
+                  {sortHeader("name", "Name")}
+                  {sortHeader("year", "Year")}
+                  {sortHeader("runtime", "Runtime")}
+                  {sortHeader("genre", "Genre")}
+                  {sortHeader("imdb", "IMDb")}
+                  {sortHeader("avg_rating", "Theatre Ø")}
+                  {sortHeader("my_rating", "My rating")}
+                  <th aria-label="Remove" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedMovies.map((entry) => (
+                  <tr key={entry.id}>
+                    <td>
+                      <Link to={`/movies/${entry.id}`} className="table__link">
+                        {entry.name}
+                      </Link>
+                    </td>
+                    <td>{entry.year ?? "-"}</td>
+                    <td>
+                      {entry.runtime !== null ? `${entry.runtime} min` : "-"}
+                    </td>
+                    <td>{entry.genre ?? "-"}</td>
+                    <td>{entry.imdbRating ?? "-"}</td>
+                    <td>
+                      {entry.ratingCount >= 2 ? entry.averageRating : "-"}
+                    </td>
+                    <td>
+                      <RatingDisplay movieId={entry.id} />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="table__action table__action--danger"
+                        aria-label={`Remove ${entry.name} from watchlist`}
+                        onClick={() => void handleRemoveFromWatchlist(entry)}
+                        disabled={removingId !== null}
+                      >
+                        x
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {sortedMovies.length === 0 && (
+            <p className="muted">No movies match your search.</p>
+          )}
         </>
-      )}
-      {sortedMovies !== null && sortedMovies.length === 0 && searchQuery && (
-        <p className="muted">No movies match your search.</p>
       )}
     </div>
   );
