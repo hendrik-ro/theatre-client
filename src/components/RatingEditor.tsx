@@ -23,8 +23,8 @@ export default function RatingEditor({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === "" || rating < 0 || rating > 10) {
-      setError("Please select a valid rating between 0 and 10");
+    if (rating === "" || rating < 1 || rating > 10) {
+      setError("Please select a valid rating between 1 and 10");
       return;
     }
 
@@ -74,7 +74,7 @@ export default function RatingEditor({
         aria-label="My rating"
       >
         <option value="">Select a rating...</option>
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].reverse().map((value) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].reverse().map((value) => (
           <option key={value} value={value}>
             {value}
           </option>

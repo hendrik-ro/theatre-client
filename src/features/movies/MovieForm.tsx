@@ -17,7 +17,6 @@ function fieldsFromMovie(movie?: Movie) {
     name: movie?.name ?? "",
     year: movie?.year?.toString() ?? "",
     runtime: movie?.runtime?.toString() ?? "",
-    imdbRating: movie?.imdbRating?.toString() ?? "",
     genre: movie?.genre ?? "",
   };
 }
@@ -52,7 +51,6 @@ export default function MovieForm({
       name: fields.name.trim(),
       year: fields.year ? Number(fields.year) : undefined,
       runtime: fields.runtime ? Number(fields.runtime) : undefined,
-      imdbRating: fields.imdbRating ? Number(fields.imdbRating) : undefined,
       genre: fields.genre.trim() || undefined,
     };
     onSubmit(input)
@@ -100,18 +98,6 @@ export default function MovieForm({
           placeholder="136"
           min={0}
           max={9999}
-        />
-      </label>
-      <label className="form__field">
-        <span>IMDb rating</span>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          max="10"
-          value={fields.imdbRating}
-          onChange={setField("imdbRating")}
-          placeholder="8.7"
         />
       </label>
       <label className="form__field">

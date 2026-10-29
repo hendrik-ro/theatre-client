@@ -9,6 +9,11 @@ import { request } from "./client";
 
 const BASE = "/api/movies";
 
+export interface SortParams {
+  sortBy: string;
+  sortDir: string;
+}
+
 export function getMovies(): Promise<Movie[]> {
   return request<Movie[]>(BASE);
 }
@@ -17,6 +22,7 @@ export function getMoviesPaginated(
   page: number,
   limit: number,
   filters: MovieFilters = {},
+  sort: SortParams = { sortBy: "year", sortDir: "asc" },
 ): Promise<MoviesPaginated> {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -28,12 +34,15 @@ export function getMoviesPaginated(
   if (filters.genre !== undefined) {
     params.set("genre", filters.genre ?? "");
   }
-  if (filters.imdbRating !== undefined) {
-    params.set("imdbRating", String(filters.imdbRating));
-  }
   if (filters.averageRating !== undefined) {
     params.set("averageRating", String(filters.averageRating));
   }
+  if (filters.search) {
+    params.set("search", filters.search);
+  }
+
+  params.set("sortBy", sort.sortBy);
+  params.set("sortDir", sort.sortDir);
 
   return request<MoviesPaginated>(`${BASE}?${params.toString()}`);
 }
