@@ -1,3 +1,22 @@
+# [2.0.0](https://github.com/hendrik-ro/theatre-client/compare/v1.6.0...v2.0.0) (2026-10-29)
+
+
+### Bug Fixes
+
+* **movies:** keep search and filters visible for no-match results ([8845947](https://github.com/hendrik-ro/theatre-client/commit/8845947afd873b441c106ec1a539a56977936d33))
+
+
+### Features
+
+* **movies:** dynamic search ([3137411](https://github.com/hendrik-ro/theatre-client/commit/31374112dd2df1640d6964d1af07005e58eb07bb))
+* **movies:** removed imdb rating, updated rating scaling ([d3f1477](https://github.com/hendrik-ro/theatre-client/commit/d3f14776077a1713280fe0980b58b5471941b83f))
+* **movies:** server-side search & sorting ([a0395aa](https://github.com/hendrik-ro/theatre-client/commit/a0395aa5d8559b17eea9af80aab0f3b551df1243))
+
+
+### BREAKING CHANGES
+
+* **movies:** rating scale adjusted to server v3
+
 # [1.6.0](https://github.com/hendrik-ro/theatre-client/compare/v1.5.0...v1.6.0) (2026-10-26)
 
 ### Bug Fixes
