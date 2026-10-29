@@ -27,11 +27,9 @@ interface MovieFiltersProps {
   meta: MoviesMeta;
   year: YearFilter;
   genre: GenreFilter;
-  imdbRating: RatingFilterValue;
   averageRating: RatingFilterValue;
   onYearChange: (year: YearFilter) => void;
   onGenreChange: (genre: GenreFilter) => void;
-  onImdbRatingChange: (rating: RatingFilterValue) => void;
   onAverageRatingChange: (rating: RatingFilterValue) => void;
   onClearAll: () => void;
 }
@@ -46,11 +44,9 @@ export default function MovieFilters({
   meta,
   year,
   genre,
-  imdbRating,
   averageRating,
   onYearChange,
   onGenreChange,
-  onImdbRatingChange,
   onAverageRatingChange,
   onClearAll,
 }: MovieFiltersProps) {
@@ -74,10 +70,6 @@ export default function MovieFilters({
     onGenreChange(
       value === "all" ? null : value === "unknown" ? "unknown" : value,
     );
-  }
-
-  function handleImdbRating(event: ChangeEvent<HTMLSelectElement>) {
-    onImdbRatingChange(event.target.value as RatingFilterValue);
   }
 
   function handleAverageRating(event: ChangeEvent<HTMLSelectElement>) {
@@ -110,16 +102,6 @@ export default function MovieFilters({
               value={entry.year === null ? "unknown" : entry.year}
             >
               {entry.year === null ? "Unknown" : entry.year}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="filters__field">
-        <span>IMDb Rating</span>
-        <select value={imdbRating} onChange={handleImdbRating}>
-          {RATING_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {ratingDisplayName(option)}
             </option>
           ))}
         </select>

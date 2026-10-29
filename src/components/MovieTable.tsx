@@ -3,7 +3,7 @@ import RatingDisplay from "./RatingDisplay";
 import type { Movie } from "../types/movie";
 
 type SortKey =
-  "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
+  "name" | "year" | "runtime" | "genre" | "avg_rating" | "my_rating";
 type SortDir = "asc" | "desc";
 
 interface MovieWithUserRating extends Movie {
@@ -65,7 +65,6 @@ export default function MovieTable({
           {sortHeader("year", "Year")}
           {sortHeader("runtime", "Runtime")}
           {sortHeader("genre", "Genre")}
-          {sortHeader("imdb", "IMDb")}
           {sortHeader("avg_rating", "Theatre \u00D8")}
           {showUserRating && sortHeader("my_rating", "My rating")}
           {user && onToggleWatchlist && <th aria-label="Watchlist" />}
@@ -82,8 +81,7 @@ export default function MovieTable({
             <td>{movie.year ?? "-"}</td>
             <td>{movie.runtime !== null ? `${movie.runtime} min` : "-"}</td>
             <td>{movie.genre ?? "-"}</td>
-            <td>{movie.imdbRating ?? "-"}</td>
-            <td>{movie.ratingCount >= 2 ? movie.averageRating : "-"}</td>
+            <td>{movie.averageRating ?? "-"}</td>
             {showUserRating && (
               <td>
                 <RatingDisplay movieId={movie.id} />

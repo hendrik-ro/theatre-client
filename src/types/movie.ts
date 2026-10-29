@@ -5,7 +5,6 @@ export interface Movie {
   updatedAt: string;
   year: number | null;
   runtime: number | null;
-  imdbRating: number | null;
   genre: string | null;
   averageRating: number | null;
   ratingCount: number;
@@ -15,7 +14,6 @@ export interface MovieInput {
   name: string;
   year?: number;
   runtime?: number;
-  imdbRating?: number;
   genre?: string;
 }
 
@@ -36,7 +34,6 @@ export interface MoviesPaginated {
 export interface MovieFilters {
   year?: number | null;
   genre?: string | null;
-  imdbRating?: number | null;
   averageRating?: number | null;
   search?: string;
 }

@@ -34,9 +34,6 @@ export function getMoviesPaginated(
   if (filters.genre !== undefined) {
     params.set("genre", filters.genre ?? "");
   }
-  if (filters.imdbRating !== undefined) {
-    params.set("imdbRating", String(filters.imdbRating));
-  }
   if (filters.averageRating !== undefined) {
     params.set("averageRating", String(filters.averageRating));
   }

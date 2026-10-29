@@ -106,12 +106,8 @@ export default function MovieDetail() {
             <dd>{movie.runtime !== null ? `${movie.runtime} min` : "—"}</dd>
           </div>
           <div>
-            <dt>IMDb rating</dt>
-            <dd>{movie.imdbRating ?? "—"}</dd>
-          </div>
-          <div>
             <dt>Theatre Ø</dt>
-            <dd>{movie.ratingCount >= 2 ? movie.averageRating : "-"}</dd>
+            <dd>{movie.averageRating ?? "-"}</dd>
           </div>
           <div>
             <dt>Genre</dt>

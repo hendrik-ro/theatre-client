@@ -23,7 +23,7 @@ import MovieTable from "../../components/MovieTable";
 import useMoviesWithUserRatings from "../../hooks/useMoviesWithUserRatings";
 
 type SortKey =
-  "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
+  "name" | "year" | "runtime" | "genre" | "avg_rating" | "my_rating";
 type SortDir = "asc" | "desc";
 
 // Filters live in the URL (?year=, ?genre=) so filtered views are
@@ -63,7 +63,6 @@ export default function MoviesList() {
   // Parse filter and sort values from URL
   const yearFilter = parseYearFilter(searchParams.get("year"));
   const genreFilter = parseGenreFilter(searchParams.get("genre"));
-  const imdbRatingFilter = parseRatingFilter(searchParams.get("imdbRating"));
   const averageRatingFilter = parseRatingFilter(
     searchParams.get("averageRating"),
   );
@@ -100,10 +99,6 @@ export default function MoviesList() {
     if (genreFilter !== null) {
       requestFilter.genre = genreFilter === "unknown" ? null : genreFilter;
     }
-    const imdbRating = ratingToServerValue(imdbRatingFilter);
-    if (imdbRating !== undefined) {
-      requestFilter.imdbRating = imdbRating;
-    }
     const averageRating = ratingToServerValue(averageRatingFilter);
     if (averageRating !== undefined) {
       requestFilter.averageRating = averageRating;
@@ -136,7 +131,6 @@ export default function MoviesList() {
     currentPage,
     yearFilter,
     genreFilter,
-    imdbRatingFilter,
     averageRatingFilter,
     searchQuery,
     sortKey,
@@ -223,7 +217,7 @@ export default function MoviesList() {
   }
 
   function setRatingFilterParam(
-    key: "imdbRating" | "averageRating",
+    key: "averageRating",
     value: RatingFilterValue,
   ) {
     const next = new URLSearchParams(searchParams);
@@ -311,16 +305,12 @@ export default function MoviesList() {
               meta={meta}
               year={yearFilter}
               genre={genreFilter}
-              imdbRating={imdbRatingFilter}
               averageRating={averageRatingFilter}
               onYearChange={(year) =>
                 setFilterParam("year", filterToParam(year))
               }
               onGenreChange={(genre) =>
                 setFilterParam("genre", filterToParam(genre))
-              }
-              onImdbRatingChange={(rating) =>
-                setRatingFilterParam("imdbRating", rating)
               }
               onAverageRatingChange={(rating) =>
                 setRatingFilterParam("averageRating", rating)

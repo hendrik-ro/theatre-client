@@ -10,7 +10,7 @@ import useMoviesWithUserRatings, {
 } from "../../hooks/useMoviesWithUserRatings";
 
 type SortKey =
-  "name" | "year" | "runtime" | "imdb" | "genre" | "avg_rating" | "my_rating";
+  "name" | "year" | "runtime" | "genre" | "avg_rating" | "my_rating";
 type SortDir = "asc" | "desc";
 
 const SORT_ACCESSORS: Record<
@@ -20,7 +20,6 @@ const SORT_ACCESSORS: Record<
   name: (movie) => movie.name,
   year: (movie) => movie.year,
   runtime: (movie) => movie.runtime,
-  imdb: (movie) => movie.imdbRating,
   genre: (movie) => movie.genre,
   avg_rating: (movie) => movie.averageRating,
   my_rating: (movie) => movie.userRating,
